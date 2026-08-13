@@ -26,9 +26,9 @@ export async function generateMetadata(): Promise<Metadata> {
     openGraph: {
       title: "DataSprint 95",
       description: "95 days. 178 hours. One job-ready data science portfolio.",
-      images: [{ url: new URL("/og.png", base).toString(), width: 1200, height: 630, alt: "DataSprint 95 — Build skills that compound" }],
+      images: [{ url: new URL("/og-control-room.png", base).toString(), width: 1200, height: 630, alt: "DataSprint 95 — Build skills daily. Stay on track." }],
     },
-    twitter: { card: "summary_large_image", images: [new URL("/og.png", base).toString()] },
+    twitter: { card: "summary_large_image", images: [new URL("/og-control-room.png", base).toString()] },
   };
 }
 
