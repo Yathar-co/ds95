@@ -7,6 +7,7 @@ type DayPlan = { day: number; topic: string; course: string; week: number; objec
 type Activity = { completed: string[]; minutes: number; notes: string; difficulty: number; confidence: number; challenge?: boolean; reflection?: string };
 type AppState = { name: string; startDate: string; dailyTarget: number; timezone?: string; theme: "dark" | "light"; onboarded: boolean; xp: number; activities: Record<string, Activity>; personalTasks: Task[]; freezes: string[] };
 type View = "dashboard" | "today" | "syllabus" | "projects" | "analytics";
+type SyncStatus = "loading" | "saving" | "saved" | "device";
 
 const COURSES = [
   ["What is Data Science?", 12, ["Definition and importance of data science", "Structured and unstructured data", "Applications of data science", "Data careers and responsibilities", "Four types of analytics", "The data-science workflow", "Turning needs into business questions", "Privacy, ethics, fairness and bias"]],
@@ -130,9 +131,9 @@ function calcStreak(state:AppState){ let current=0,longest=0,run=0; const start=
 const NAV:[View,string,string][]=[["dashboard","Mission","◉"],["today","Today","▶"],["syllabus","Syllabus","▤"],["projects","Projects","◇"],["analytics","Progress","↗"]];
 
 export default function Home(){
-  const [state,setState]=useState<AppState>(()=>seedState()); const [ready,setReady]=useState(false); const [view,setView]=useState<View>("dashboard"); const [selectedDay,setSelectedDay]=useState<number|null>(null); const [toast,setToast]=useState("");
-  useEffect(()=>{let active=true;queueMicrotask(()=>{if(!active)return;try{const saved=localStorage.getItem("datasprint95");if(saved)setState(JSON.parse(saved));}catch(error){console.warn("Could not restore saved DataSprint progress",error)}setReady(true)});return()=>{active=false}},[]);
-  useEffect(()=>{if(ready){localStorage.setItem("datasprint95",JSON.stringify(state));document.documentElement.dataset.theme=state.theme}},[state,ready]);
+  const [state,setState]=useState<AppState>(()=>seedState()); const [ready,setReady]=useState(false); const [syncStatus,setSyncStatus]=useState<SyncStatus>("loading"); const [view,setView]=useState<View>("dashboard"); const [selectedDay,setSelectedDay]=useState<number|null>(null); const [toast,setToast]=useState("");
+  useEffect(()=>{let active=true;queueMicrotask(async()=>{if(!active)return;let restored=seedState();try{const saved=localStorage.getItem("datasprint95");if(saved)restored=JSON.parse(saved)}catch(error){console.warn("Could not restore saved DataSprint progress",error)}try{const response=await fetch("/api/progress",{credentials:"same-origin"});if(response.ok){const remote=await response.json();if(remote.state)restored=remote.state;setSyncStatus("saved")}else setSyncStatus("device")}catch{setSyncStatus("device")}if(active){setState(restored);setReady(true)}});return()=>{active=false}},[]);
+  useEffect(()=>{if(!ready)return;localStorage.setItem("datasprint95",JSON.stringify(state));document.documentElement.dataset.theme=state.theme;const timeout=window.setTimeout(async()=>{setSyncStatus(current=>current==="device"?"device":"saving");try{const response=await fetch("/api/progress",{method:"PUT",headers:{"content-type":"application/json"},credentials:"same-origin",body:JSON.stringify(state)});setSyncStatus(response.ok?"saved":"device")}catch{setSyncStatus("device")}},700);return()=>window.clearTimeout(timeout)},[state,ready]);
   const update=(fn:(s:AppState)=>AppState)=>setState(s=>fn(s));
   const currentDay=Math.max(1,dayDiff(state.startDate,todayIso())+1); const totalRequired=CURRICULUM.flatMap(d=>d.tasks.filter(t=>t.required)).length; const allDone=new Set(Object.values(state.activities).flatMap(a=>a.completed)); const doneRequired=CURRICULUM.flatMap(d=>d.tasks.filter(t=>t.required)).filter(t=>allDone.has(t.id)).length; const completion=Math.round(doneRequired/totalRequired*100); const expected=Math.min(100,Math.round(currentDay/95*100)); const streak=calcStreak(state); const totalMinutes=Object.values(state.activities).reduce((s,a)=>s+a.minutes,0); const activeDays=Object.values(state.activities).filter(active).length; const totalTasks=Object.values(state.activities).reduce((s,a)=>s+a.completed.length,0); const todayPlan=CURRICULUM[Math.min(currentDay,95)-1]; const todayActivity=state.activities[todayIso()]||{completed:[],minutes:0,notes:"",difficulty:3,confidence:3};
   const notice=completion>=100?"You completed the DataSprint 95 journey!":currentDay>100?"Your target date has passed. Let’s create a recovery plan.":completion+3<expected?"You’re a little behind. Complete one catch-up task today.":"You’re on track. Keep going!";
@@ -143,6 +144,7 @@ export default function Home(){
     <nav className="floating-nav" aria-label="Primary navigation">
       <button className="nav-logo" onClick={()=>setView("dashboard")} aria-label="DataSprint 95 mission dashboard">DS<span>95</span></button>
       <div className="nav-links">{NAV.map(([id,label])=><button key={id} className={view===id?"active":""} aria-current={view===id?"page":undefined} onClick={()=>setView(id)}><span>{label}</span>{view===id&&<i/>}</button>)}</div>
+      <span className={`sync-status ${syncStatus}`} title={syncStatus==="device"?"Saved on this device; cloud sync is unavailable":"Progress is synced securely"}><i/>{syncStatus==="loading"?"Loading":syncStatus==="saving"?"Saving":syncStatus==="saved"?"Synced":"Device only"}</span>
       <button className="nav-profile" aria-label={`${state.name} profile`}><span>{state.name[0]||"A"}</span></button>
       <button className="nav-continue" onClick={()=>setView("today")}>Continue <span>→</span></button>
     </nav>

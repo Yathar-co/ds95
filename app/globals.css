@@ -84,6 +84,11 @@ main { min-height: 100vh; padding-top: 104px; }
 .nav-links button.active { color: white; border-color: var(--line); background: rgba(255,255,255,.07); box-shadow: 0 1px 0 rgba(255,255,255,.05) inset; }
 .nav-links i { display: none; }
 .nav-profile { width: 42px; height: 42px; flex: 0 0 auto; border: 1px solid var(--line-strong); border-radius: 50%; background: linear-gradient(145deg, #27272c, #17171a); font-weight: 700; }
+.sync-status { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font: 600 9px var(--font-geist-mono); white-space: nowrap; }
+.sync-status i { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px rgba(121,213,162,.5); }
+.sync-status.saving i, .sync-status.loading i { background: var(--amber); box-shadow: none; animation: sync-pulse 1s ease infinite; }
+.sync-status.device i { background: var(--subtle); box-shadow: none; }
+@keyframes sync-pulse { 50% { opacity: .35; } }
 .nav-continue, .primary, .secondary { min-height: 44px; padding: 0 20px; border-radius: 999px; font-size: 13px; font-weight: 700; transition: transform .18s ease, box-shadow .18s ease, background .18s ease; }
 .nav-continue, .primary { border: 0; background: white; color: #0b0b0d; box-shadow: 0 8px 25px rgba(0,0,0,.22); }
 .nav-continue:hover, .primary:hover { transform: translateY(-2px); box-shadow: 0 0 0 1px white, 0 10px 32px rgba(124,115,255,.24); }
@@ -367,6 +372,7 @@ main { min-height: 100vh; padding-top: 104px; }
 
 @media (max-width: 960px) {
   .nav-links button { padding-inline: 10px; }
+  .sync-status { display: none; }
   .mission-hero { grid-template-columns: 1fr; padding: 48px; }
   .hero-signal { padding: 40px 0 0; }
   .signal-window { min-height: 230px; }
