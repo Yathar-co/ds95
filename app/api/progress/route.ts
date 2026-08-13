@@ -1,16 +1,23 @@
-import { getChatGPTUser } from "@/app/chatgpt-auth";
+import { createClient } from "@supabase/supabase-js";
 import { getProgress, saveProgress } from "@/db/progress";
 
 export const runtime = "edge";
 
-async function currentUserId() {
-  const user = await getChatGPTUser();
-  if (user) return user.userId;
-  return process.env.NODE_ENV === "development" ? "local-development" : null;
+async function currentUserId(request: Request) {
+  const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const publishableKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+  if (!token || !url || !publishableKey) return null;
+
+  const supabase = createClient(url, publishableKey, {
+    auth: { persistSession: false, autoRefreshToken: false },
+  });
+  const { data, error } = await supabase.auth.getUser(token);
+  return error ? null : data.user?.id ?? null;
 }
 
-export async function GET() {
-  const userId = await currentUserId();
+export async function GET(request: Request) {
+  const userId = await currentUserId(request);
   if (!userId) return Response.json({ error: "Sign in is required" }, { status: 401 });
 
   try {
@@ -23,7 +30,7 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  const userId = await currentUserId();
+  const userId = await currentUserId(request);
   if (!userId) return Response.json({ error: "Sign in is required" }, { status: 401 });
 
   let state: unknown;
