@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { getProgress, saveProgress } from "@/db/progress";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
 
 async function currentUserId(request: Request) {
   const token = request.headers.get("authorization")?.replace(/^Bearer\s+/i, "");

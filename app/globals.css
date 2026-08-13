@@ -9,12 +9,15 @@
   --color-ash: #b8b8bd;
   --color-slate: #74747d;
   --color-dusk-violet: #7c73ff;
-  --font-dm-sans: "DM Sans", ui-sans-serif, system-ui;
-  --font-geist: "Geist", ui-sans-serif, system-ui;
+  --font-dm-sans: "Avenir Next", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-geist: "Avenir Next", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
 }
 
 :root {
   color-scheme: dark;
+  --font-dm-sans: "Avenir Next", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-geist-sans: "Avenir Next", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  --font-geist-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   --canvas: #09090b;
   --canvas-soft: #0e0e11;
   --surface: #151517;

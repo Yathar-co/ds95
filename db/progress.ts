@@ -1,4 +1,4 @@
-import { neon } from "@neondatabase/serverless";
+import { neon, type NeonQueryFunction } from "@neondatabase/serverless";
 
 type ProgressRecord = {
   state: unknown;
@@ -39,7 +39,7 @@ export async function saveProgress(userId: string, state: unknown): Promise<stri
   return String(rows[0]?.updated_at ?? new Date().toISOString());
 }
 
-async function ensureProgressTable(sql: ReturnType<typeof neon>) {
+async function ensureProgressTable(sql: NeonQueryFunction<false, false>) {
   await sql`
     CREATE TABLE IF NOT EXISTS datasprint_progress (
       user_id TEXT PRIMARY KEY,
