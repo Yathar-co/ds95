@@ -25,6 +25,68 @@ const COURSES = [
 
 const FINAL_TOPICS = ["Catch up on unfinished lessons", "Repeat weak Python topics", "Repeat weak SQL topics", "Revise statistics", "Revise machine-learning metrics", "Clean GitHub repositories", "Improve project documentation", "Complete missing visualizations", "Improve your résumé", "Run a mock interview", "Final assessment and graduation"];
 
+const GFG_GUIDES: Array<[RegExp,string]> = [
+  [/Google Colab|Jupyter/i,"https://www.geeksforgeeks.org/python/how-to-use-google-colab/"],
+  [/Git and GitHub|Repositories|commits|branches/i,"https://www.geeksforgeeks.org/git/git-tutorial/"],
+  [/README|GitHub profile/i,"https://www.geeksforgeeks.org/git/how-to-write-a-good-readme-file-for-your-github-project/"],
+  [/data warehouse|data lake/i,"https://www.geeksforgeeks.org/dbms/data-warehousing/"],
+  [/cloud computing/i,"https://www.geeksforgeeks.org/cloud-computing/cloud-computing/"],
+  [/CRISP-DM|Business understanding|Data understanding|Deployment and feedback/i,"https://www.geeksforgeeks.org/data-science/data-science-process/"],
+  [/variables|data types/i,"https://www.geeksforgeeks.org/python/python-variables/"],
+  [/Strings and operators/i,"https://www.geeksforgeeks.org/python/python-operators/"],
+  [/Lists, tuples|dictionaries|sets/i,"https://www.geeksforgeeks.org/python/python-data-structures/"],
+  [/Conditions, loops|functions/i,"https://www.geeksforgeeks.org/python/python-programming-language-tutorial/"],
+  [/Files and exceptions/i,"https://www.geeksforgeeks.org/python/file-handling-python/"],
+  [/Objects and classes/i,"https://www.geeksforgeeks.org/python/python-oops-concepts/"],
+  [/NumPy arrays/i,"https://www.geeksforgeeks.org/numpy/numpy-tutorial/"],
+  [/pandas Series|DataFrames/i,"https://www.geeksforgeeks.org/pandas/python-pandas-dataframe/"],
+  [/Filtering and sorting/i,"https://www.geeksforgeeks.org/pandas/filter-pandas-dataframe-with-multiple-conditions/"],
+  [/Grouping and aggregation/i,"https://www.geeksforgeeks.org/pandas/pandas-groupby/"],
+  [/APIs and JSON/i,"https://www.geeksforgeeks.org/python/python-api-tutorial-getting-started-with-apis/"],
+  [/Requests and Beautiful Soup|web scraping/i,"https://www.geeksforgeeks.org/python/implementing-web-scraping-python-beautiful-soup/"],
+  [/public dataset|Collect and validate data|data collection/i,"https://www.geeksforgeeks.org/data-science/data-collection-methods/"],
+  [/Clean data|Missing values|duplicates/i,"https://www.geeksforgeeks.org/data-analysis/data-cleaning/"],
+  [/Moving averages|percentage changes/i,"https://www.geeksforgeeks.org/pandas/how-to-calculate-moving-average-in-a-pandas-dataframe/"],
+  [/Relational database|Tables, keys|relationships/i,"https://www.geeksforgeeks.org/dbms/relational-model-in-dbms/"],
+  [/SELECT and filtering|Aggregations|GROUP BY|HAVING|Create and modify data/i,"https://www.geeksforgeeks.org/sql/sql-data-analysis/"],
+  [/SQL joins/i,"https://www.geeksforgeeks.org/sql/sql-join-set-1-inner-left-right-and-full-joins/"],
+  [/Subqueries and CTEs/i,"https://www.geeksforgeeks.org/sql/sql-with-clause/"],
+  [/Views and transactions/i,"https://www.geeksforgeeks.org/sql/sql-transactions/"],
+  [/SQLite with Python/i,"https://www.geeksforgeeks.org/python/python-sqlite/"],
+  [/SQL results in pandas/i,"https://www.geeksforgeeks.org/pandas/working-with-database-using-pandas/"],
+  [/Fixing data types/i,"https://www.geeksforgeeks.org/pandas/change-data-type-for-one-or-more-columns-in-pandas-dataframe/"],
+  [/Normalization and binning/i,"https://www.geeksforgeeks.org/machine-learning/data-pre-processing-wit-sklearn-using-standard-and-minmax-scaler/"],
+  [/Categorical encoding/i,"https://www.geeksforgeeks.org/machine-learning/feature-encoding-techniques-machine-learning/"],
+  [/Exploratory data analysis/i,"https://www.geeksforgeeks.org/data-analysis/exploratory-data-analysis-in-python/"],
+  [/Descriptive statistics|Distributions and outliers/i,"https://www.geeksforgeeks.org/data-science/descriptive-statistics/"],
+  [/Correlation/i,"https://www.geeksforgeeks.org/pandas/python-pandas-dataframe-corr/"],
+  [/Linear regression/i,"https://www.geeksforgeeks.org/machine-learning/ml-linear-regression/"],
+  [/MAE, MSE|R²/i,"https://www.geeksforgeeks.org/machine-learning/regression-metrics/"],
+  [/Visualization principles|Honest axes|Data storytelling/i,"https://www.geeksforgeeks.org/data-visualization/data-visualization-and-its-importance/"],
+  [/Matplotlib|Line, bar|Histograms|box plots|Scatter|bubble charts/i,"https://www.geeksforgeeks.org/python/matplotlib-tutorial/"],
+  [/Seaborn|Heatmaps|regression plots/i,"https://www.geeksforgeeks.org/python/seaborn-tutorial/"],
+  [/Folium|choropleth/i,"https://www.geeksforgeeks.org/python/visualizing-geospatial-data-using-folium-in-python/"],
+  [/Plotly dashboards/i,"https://www.geeksforgeeks.org/python/plotly-tutorial/"],
+  [/Supervised and unsupervised/i,"https://www.geeksforgeeks.org/machine-learning/supervised-unsupervised-learning/"],
+  [/Features and targets|Feature selection/i,"https://www.geeksforgeeks.org/machine-learning/feature-selection-techniques-in-machine-learning/"],
+  [/Train, validation|Cross-validation/i,"https://www.geeksforgeeks.org/machine-learning/cross-validation-machine-learning/"],
+  [/Overfitting and leakage/i,"https://www.geeksforgeeks.org/machine-learning/underfitting-and-overfitting-in-machine-learning/"],
+  [/logistic regression/i,"https://www.geeksforgeeks.org/machine-learning/understanding-logistic-regression/"],
+  [/K-nearest neighbours/i,"https://www.geeksforgeeks.org/machine-learning/k-nearest-neighbours/"],
+  [/Decision trees/i,"https://www.geeksforgeeks.org/machine-learning/decision-tree/"],
+  [/Support-vector machines/i,"https://www.geeksforgeeks.org/machine-learning/support-vector-machine-algorithm/"],
+  [/Confusion matrix|Precision, recall|F1|ROC-AUC|evaluation metric/i,"https://www.geeksforgeeks.org/machine-learning/confusion-matrix-machine-learning/"],
+  [/K-means clustering/i,"https://www.geeksforgeeks.org/machine-learning/k-means-clustering-introduction/"],
+  [/Principal component analysis/i,"https://www.geeksforgeeks.org/machine-learning/implementing-pca-in-python-with-scikit-learn/"],
+  [/Hyperparameter tuning/i,"https://www.geeksforgeeks.org/machine-learning/hyperparameter-tuning/"],
+  [/pipelines/i,"https://www.geeksforgeeks.org/machine-learning/pipelines-python-and-scikit-learn/"],
+  [/Generative AI|Hallucinations|AI-assisted|Verify AI|Responsible AI/i,"https://www.geeksforgeeks.org/artificial-intelligence/generative-ai/"],
+  [/résumé|job descriptions|interview|capstone presentation/i,"https://www.geeksforgeeks.org/blogs/data-scientist-interview-questions-and-answers/"],
+  [/data science|analytics|data careers|privacy|ethics|fairness|bias|Python, SQL and R|NumPy, pandas and scikit|applications/i,"https://www.geeksforgeeks.org/data-science/data-science-course-syllabus-subjects/"],
+];
+
+function gfgUrl(topic:string){return GFG_GUIDES.find(([pattern])=>pattern.test(topic))?.[1]||"https://www.geeksforgeeks.org/data-science/data-science-course-syllabus-subjects/"}
+
 function makeCurriculum(): DayPlan[] {
   const core: DayPlan[] = [];
   COURSES.forEach((course, ci) => {
@@ -157,7 +219,7 @@ function Syllabus({state,allDone,completion,update,notify}:{state:AppState,allDo
     const pct=Math.round(tasks.filter(t=>allDone.has(t.id)).length/Math.max(1,tasks.length)*100);
     return <article className="course" key={name}>
       <button className="course-head" onClick={()=>setOpen(open===i?null:i)}><span className={`course-num ${pct===100?"complete":pct?"current":""}`}>{pct===100?"✓":pad(i+1)}</span><div><small>COURSE {i+1} · {hours} HOURS</small><h3>{name}</h3><div className="course-bar"><span style={{width:`${pct}%`}}/></div></div><b>{pct}%</b><i>{open===i?"−":"+"}</i></button>
-      {open===i&&<div className="course-content"><div className="topic-grid">{topics.map((t,j)=><div key={t}><span className={j<pct/12?"topic-done":""}>{j<pct/12?"✓":j+1}</span><div><b>{t}</b><small>{j%3===0?"Lesson + guided practice":"Hands-on exercise"} · {35+(j%3)*10} min</small><a className="gfg-link" href={`https://www.geeksforgeeks.org/?s=${encodeURIComponent(`${t} data science`)}`} target="_blank" rel="noreferrer" aria-label={`Learn ${t} on GeeksforGeeks`}>Read on GeeksforGeeks <span aria-hidden="true">↗</span></a></div></div>)}</div><div className="resource-line"><span>↗ More free resources: official documentation, Kaggle Learn, freeCodeCamp</span><button onClick={()=>notify("Prior-knowledge assessment ready")}>Test prior knowledge</button></div></div>}
+      {open===i&&<div className="course-content"><div className="topic-grid">{topics.map((t,j)=><div key={t}><span className={j<pct/12?"topic-done":""}>{j<pct/12?"✓":j+1}</span><div><b>{t}</b><small>{j%3===0?"Lesson + guided practice":"Hands-on exercise"} · {35+(j%3)*10} min</small><a className="gfg-link" href={gfgUrl(t)} target="_blank" rel="noreferrer" aria-label={`Learn ${t} on GeeksforGeeks`}>Learn this topic on GeeksforGeeks <span aria-hidden="true">↗</span></a></div></div>)}</div><div className="resource-line"><span>↗ More free resources: official documentation, Kaggle Learn, freeCodeCamp</span><button onClick={()=>notify("Prior-knowledge assessment ready")}>Test prior knowledge</button></div></div>}
     </article>
   })}</section>
   <section className="personal-card"><div><h3>Personal learning tasks</h3><p>Add goals without changing required syllabus progress.</p></div><div className="add-task"><input value={newTask} onChange={e=>setNewTask(e.target.value)} onKeyDown={e=>e.key==="Enter"&&add()} placeholder="e.g. Revisit pandas groupby"/><button className="primary" onClick={add}>Add task</button></div>{state.personalTasks.map(t=><div className="personal-row" key={t.id}><span>○</span><b>{t.title}</b><button onClick={()=>update(s=>({...s,personalTasks:s.personalTasks.filter(x=>x.id!==t.id)}))}>Remove</button></div>)}</section>
