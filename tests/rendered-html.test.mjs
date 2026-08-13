@@ -39,3 +39,12 @@ test("finished app replaces starter preview and contains core product surfaces",
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   await assert.rejects(access(new URL("../app/_sites-preview/SkeletonPreview.tsx", import.meta.url)));
 });
+
+test("includes secure sign-in, recovery messaging, and account controls", async () => {
+  const source = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  assert.match(source, /Sign in with ChatGPT/);
+  assert.match(source, /Forgotten-password recovery/);
+  assert.match(source, /Reset access securely by email/);
+  assert.match(source, /DataSprint never receives or stores your password/);
+  assert.match(source, /Sign out/);
+});

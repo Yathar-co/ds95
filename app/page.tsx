@@ -8,6 +8,7 @@ type Activity = { completed: string[]; minutes: number; notes: string; difficult
 type AppState = { name: string; startDate: string; dailyTarget: number; timezone?: string; theme: "dark" | "light"; onboarded: boolean; xp: number; activities: Record<string, Activity>; personalTasks: Task[]; freezes: string[] };
 type View = "dashboard" | "today" | "syllabus" | "projects" | "analytics";
 type SyncStatus = "loading" | "saving" | "saved" | "device";
+type Session = { authenticated: boolean; user: { displayName: string; email: string } | null; signInPath?: string; signOutPath?: string | null; localPreview: boolean };
 
 const COURSES = [
   ["What is Data Science?", 12, ["Definition and importance of data science", "Structured and unstructured data", "Applications of data science", "Data careers and responsibilities", "Four types of analytics", "The data-science workflow", "Turning needs into business questions", "Privacy, ethics, fairness and bias"]],
@@ -131,21 +132,23 @@ function calcStreak(state:AppState){ let current=0,longest=0,run=0; const start=
 const NAV:[View,string,string][]=[["dashboard","Mission","◉"],["today","Today","▶"],["syllabus","Syllabus","▤"],["projects","Projects","◇"],["analytics","Progress","↗"]];
 
 export default function Home(){
-  const [state,setState]=useState<AppState>(()=>seedState()); const [ready,setReady]=useState(false); const [syncStatus,setSyncStatus]=useState<SyncStatus>("loading"); const [view,setView]=useState<View>("dashboard"); const [selectedDay,setSelectedDay]=useState<number|null>(null); const [toast,setToast]=useState("");
+  const [state,setState]=useState<AppState>(()=>seedState()); const [ready,setReady]=useState(false); const [session,setSession]=useState<Session|null>(null); const [accountOpen,setAccountOpen]=useState(false); const [syncStatus,setSyncStatus]=useState<SyncStatus>("loading"); const [view,setView]=useState<View>("dashboard"); const [selectedDay,setSelectedDay]=useState<number|null>(null); const [toast,setToast]=useState("");
+  useEffect(()=>{let active=true;fetch("/api/session",{credentials:"same-origin"}).then(response=>response.json()).then(data=>{if(active)setSession(data)}).catch(()=>{if(active)setSession({authenticated:false,user:null,signInPath:"/signin-with-chatgpt?return_to=%2F",localPreview:false})});return()=>{active=false}},[]);
   useEffect(()=>{let active=true;queueMicrotask(async()=>{if(!active)return;let restored=seedState();try{const saved=localStorage.getItem("datasprint95");if(saved)restored=JSON.parse(saved)}catch(error){console.warn("Could not restore saved DataSprint progress",error)}try{const response=await fetch("/api/progress",{credentials:"same-origin"});if(response.ok){const remote=await response.json();if(remote.state)restored=remote.state;setSyncStatus("saved")}else setSyncStatus("device")}catch{setSyncStatus("device")}if(active){setState(restored);setReady(true)}});return()=>{active=false}},[]);
   useEffect(()=>{if(!ready)return;localStorage.setItem("datasprint95",JSON.stringify(state));document.documentElement.dataset.theme=state.theme;const timeout=window.setTimeout(async()=>{setSyncStatus(current=>current==="device"?"device":"saving");try{const response=await fetch("/api/progress",{method:"PUT",headers:{"content-type":"application/json"},credentials:"same-origin",body:JSON.stringify(state)});setSyncStatus(response.ok?"saved":"device")}catch{setSyncStatus("device")}},700);return()=>window.clearTimeout(timeout)},[state,ready]);
   const update=(fn:(s:AppState)=>AppState)=>setState(s=>fn(s));
   const currentDay=Math.max(1,dayDiff(state.startDate,todayIso())+1); const totalRequired=CURRICULUM.flatMap(d=>d.tasks.filter(t=>t.required)).length; const allDone=new Set(Object.values(state.activities).flatMap(a=>a.completed)); const doneRequired=CURRICULUM.flatMap(d=>d.tasks.filter(t=>t.required)).filter(t=>allDone.has(t.id)).length; const completion=Math.round(doneRequired/totalRequired*100); const expected=Math.min(100,Math.round(currentDay/95*100)); const streak=calcStreak(state); const totalMinutes=Object.values(state.activities).reduce((s,a)=>s+a.minutes,0); const activeDays=Object.values(state.activities).filter(active).length; const totalTasks=Object.values(state.activities).reduce((s,a)=>s+a.completed.length,0); const todayPlan=CURRICULUM[Math.min(currentDay,95)-1]; const todayActivity=state.activities[todayIso()]||{completed:[],minutes:0,notes:"",difficulty:3,confidence:3};
   const notice=completion>=100?"You completed the DataSprint 95 journey!":currentDay>100?"Your target date has passed. Let’s create a recovery plan.":completion+3<expected?"You’re a little behind. Complete one catch-up task today.":"You’re on track. Keep going!";
   const notify=(m:string)=>{setToast(m);setTimeout(()=>setToast(""),2400)};
-  if(!ready)return <div className="boot">Preparing your sprint…</div>;
+  if(!ready||!session)return <div className="boot">Preparing your sprint…</div>;
+  if(!session.authenticated)return <AuthScreen signInPath={session.signInPath||"/signin-with-chatgpt?return_to=%2F"}/>;
   return <div className="app-shell">
     <a className="skip-link" href="#main-content">Skip to main content</a>
     <nav className="floating-nav" aria-label="Primary navigation">
       <button className="nav-logo" onClick={()=>setView("dashboard")} aria-label="DataSprint 95 mission dashboard">DS<span>95</span></button>
       <div className="nav-links">{NAV.map(([id,label])=><button key={id} className={view===id?"active":""} aria-current={view===id?"page":undefined} onClick={()=>setView(id)}><span>{label}</span>{view===id&&<i/>}</button>)}</div>
       <span className={`sync-status ${syncStatus}`} title={syncStatus==="device"?"Saved on this device; cloud sync is unavailable":"Progress is synced securely"}><i/>{syncStatus==="loading"?"Loading":syncStatus==="saving"?"Saving":syncStatus==="saved"?"Synced":"Device only"}</span>
-      <button className="nav-profile" aria-label={`${state.name} profile`}><span>{state.name[0]||"A"}</span></button>
+      <button className="nav-profile" onClick={()=>setAccountOpen(true)} aria-label={`Open ${session.user?.displayName||state.name} account`}><span>{(session.user?.displayName||state.name)[0]||"A"}</span></button>
       <button className="nav-continue" onClick={()=>setView("today")}>Continue <span>→</span></button>
     </nav>
     <main id="main-content" tabIndex={-1}>
@@ -158,8 +161,18 @@ export default function Home(){
     <nav className="bottom-nav" aria-label="Mobile navigation">{NAV.map(([id,label,icon])=><button key={id} className={view===id?"active":""} aria-current={view===id?"page":undefined} onClick={()=>setView(id)}><i aria-hidden="true">{icon}</i><span>{label}</span></button>)}</nav>
     {!state.onboarded&&<Onboarding update={update}/>}
     {selectedDay&&<DayModal day={selectedDay} state={state} onClose={()=>setSelectedDay(null)}/>} 
+    {accountOpen&&<AccountModal session={session} syncStatus={syncStatus} onClose={()=>setAccountOpen(false)}/>}
     {toast&&<div className="toast" role="status" aria-live="polite">✓ {toast}</div>}
   </div>
+}
+
+function AuthScreen({signInPath}:{signInPath:string}){
+ return <main className="auth-page"><section className="auth-visual"><span className="auth-brand">DS<span>95</span></span><div><span className="eyebrow">DATASPRINT 95 · SECURE LEARNING WORKSPACE</span><h1>Build skills.<br/><strong>Keep your progress.</strong></h1><p>Sign in to continue your 95-day data-science journey on any device.</p></div><div className="auth-signal"><span>95</span><i/><small>DAYS OF FOCUSED PROGRESS</small></div></section><section className="auth-panel" aria-labelledby="auth-title"><div><span className="eyebrow">WELCOME BACK</span><h2 id="auth-title">Continue your sprint.</h2><p>Use your ChatGPT account for a secure, password-protected DataSprint profile.</p><a className="auth-primary" href={signInPath}>Sign in with ChatGPT <span>→</span></a><div className="auth-features"><span><i>✓</i><b>Email verification</b><small>Your identity stays protected.</small></span><span><i>✓</i><b>Forgotten-password recovery</b><small>Reset access securely by email.</small></span><span><i>✓</i><b>Cloud progress sync</b><small>Continue on another device.</small></span></div><p className="auth-note">Password creation, reset emails and account security are handled securely by ChatGPT. DataSprint never receives or stores your password.</p></div></section></main>
+}
+
+function AccountModal({session,syncStatus,onClose}:{session:Session,syncStatus:SyncStatus,onClose:()=>void}){
+ const status=syncStatus==="saved"?"Cloud progress synced":syncStatus==="saving"?"Saving progress…":syncStatus==="device"?"Saved on this device":"Loading progress…";
+ return <div className="modal-backdrop" role="presentation" onMouseDown={e=>{if(e.target===e.currentTarget)onClose()}}><section className="account-modal" role="dialog" aria-modal="true" aria-labelledby="account-title"><button className="modal-close" onClick={onClose} aria-label="Close account">×</button><span className="eyebrow">YOUR ACCOUNT</span><div className="account-identity"><span>{session.user?.displayName[0]||"A"}</span><div><h2 id="account-title">{session.user?.displayName}</h2><p>{session.user?.email}</p></div></div><div className="account-status"><i className={syncStatus}/><div><b>{status}</b><small>{session.localPreview?"Local preview session":"Protected by Sign in with ChatGPT"}</small></div></div><div className="account-security"><h3>Security & recovery</h3><p>Email verification, password recovery and reset emails are managed by your ChatGPT account. DataSprint never stores your password.</p></div>{session.signOutPath?<a className="secondary account-signout" href={session.signOutPath}>Sign out</a>:<button className="secondary account-signout" onClick={onClose}>Close local preview</button>}</section></div>
 }
 
 function Dashboard(p:{state:AppState,currentDay:number,completion:number,expected:number,streak:{current:number,longest:number},totalMinutes:number,activeDays:number,totalTasks:number,todayPlan:DayPlan,todayActivity:Activity,notice:string,setView:(v:View)=>void,setSelectedDay:(n:number)=>void}){
