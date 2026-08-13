@@ -17,7 +17,7 @@ test("server-renders DataSprint metadata and social image", async () => {
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
   const html = await response.text();
   assert.match(html, /<title>DataSprint 95 — Build skills that compound<\/title>/i);
-  assert.match(html, /property="og:image" content="http:\/\/localhost(?::3000)?\/og-control-room.png"/i);
+  assert.match(html, /property="og:image" content="http:\/\/localhost(?::3000)?\/og-dusk-workspace.png"/i);
   assert.doesNotMatch(html, /codex-preview/i);
 });
 
@@ -35,7 +35,7 @@ test("finished app replaces starter preview and contains core product surfaces",
   assert.match(page, /Learn this topic on GeeksforGeeks/);
   assert.match(page, /function gfgUrl/);
   assert.doesNotMatch(page, /geeksforgeeks\.org\/\?s=/);
-  assert.match(layout, /og-control-room\.png/);
+  assert.match(layout, /og-dusk-workspace\.png/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   await assert.rejects(access(new URL("../app/_sites-preview/SkeletonPreview.tsx", import.meta.url)));
 });
