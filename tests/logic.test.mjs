@@ -1,0 +1,32 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+
+const active = (a) => !!a && (a.tasks > 0 || a.minutes >= 30);
+const marker = ({day,complete,challenge=false,done=0,required=3}) => {
+  if (complete) return "graduated";
+  if (day > 100) return "overdue";
+  if (day > 95) return "grace";
+  if (challenge && done === required) return "challenge";
+  if (done === required) return "full";
+  if (done >= Math.ceil(required/2)) return "half";
+  return done ? "some" : "none";
+};
+const expected = day => Math.min(100, Math.round(day / 95 * 100));
+
+test("meaningful activity requires a task or 30 minutes", () => {
+  assert.equal(active({tasks:0,minutes:29}), false);
+  assert.equal(active({tasks:0,minutes:30}), true);
+  assert.equal(active({tasks:1,minutes:1}), true);
+});
+
+test("deadline markers use grace and overdue windows", () => {
+  assert.equal(marker({day:95,complete:false}), "none");
+  assert.equal(marker({day:96,complete:false}), "grace");
+  assert.equal(marker({day:101,complete:false}), "overdue");
+  assert.equal(marker({day:101,complete:true}), "graduated");
+});
+
+test("expected completion caps at one hundred percent", () => {
+  assert.equal(expected(48), 51);
+  assert.equal(expected(120), 100);
+});
