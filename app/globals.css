@@ -1011,3 +1011,23 @@ button:active:not(:disabled), .primary:active, .secondary:active { transform: sc
     transition-duration: .01ms !important;
   }
 }
+
+/* DS95 brand mark */
+.nav-logo {
+  padding: 3px;
+  background: #f1f0ec url("/brand/ds95-logo.png") center / contain no-repeat;
+  color: transparent;
+  font-size: 0;
+}
+.nav-logo span { display: none; }
+.auth-brand {
+  width: 78px;
+  height: 78px;
+  padding: 4px;
+  border-radius: 17px;
+  background: rgba(242,241,237,.96) url("/brand/ds95-logo.png") center / contain no-repeat;
+  color: transparent;
+  font-size: 0;
+  box-shadow: 0 12px 30px rgba(0,0,0,.16);
+}
+.auth-brand span { display: none; }

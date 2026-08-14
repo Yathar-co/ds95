@@ -11,7 +11,11 @@ export async function generateMetadata(): Promise<Metadata> {
     metadataBase: base,
     title: "DS95 — Turn any learning goal into a 95-day plan",
     description: "Choose what you want to master. DS95 builds a personal AI syllabus, daily plan, direct learning resources and proof-of-learning projects.",
-    icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
+    icons: {
+      icon: "/brand/ds95-logo.png",
+      shortcut: "/brand/ds95-logo.png",
+      apple: "/brand/ds95-logo.png",
+    },
     openGraph: {
       title: "DS95 — Your AI learning system",
       description: "One goal. A personal syllabus. 95 days of focused progress.",
