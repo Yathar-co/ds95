@@ -11,7 +11,14 @@ export type LearningGoal = {
 export type LearningResource = {
   label: string;
   url: string;
-  provider: "GeeksforGeeks";
+  provider: "GeeksforGeeks" | "Kaggle Learn" | "YouTube" | "freeCodeCamp" | "MDN" | "Microsoft Learn" | "Google Developers" | "Official documentation" | "Learning resource";
+};
+
+export type AiLesson = {
+  summary: string;
+  keyPoints: string[];
+  example: string;
+  practice: string;
 };
 
 export type LearningTopic = {
@@ -19,6 +26,7 @@ export type LearningTopic = {
   title: string;
   objective: string;
   resource: LearningResource | null;
+  aiLesson?: AiLesson;
 };
 
 export type LearningModule = {
@@ -57,6 +65,7 @@ export type DayPlan = {
   week: number;
   objective: string;
   resource: LearningResource | null;
+  aiLesson?: AiLesson;
   tasks: Task[];
 };
 
@@ -144,6 +153,71 @@ export function directGfgResource(label: unknown, value: unknown): LearningResou
   }
 }
 
+const blockedResourceHosts = new Set(["google.com", "bing.com", "duckduckgo.com"]);
+
+function providerFor(url: URL): LearningResource["provider"] {
+  const host = url.hostname.toLowerCase().replace(/^www\./, "");
+  if (host === "geeksforgeeks.org") return "GeeksforGeeks";
+  if (host === "kaggle.com") return "Kaggle Learn";
+  if (host === "youtube.com" || host === "youtu.be") return "YouTube";
+  if (host === "freecodecamp.org") return "freeCodeCamp";
+  if (host === "developer.mozilla.org") return "MDN";
+  if (host === "learn.microsoft.com") return "Microsoft Learn";
+  if (host === "developers.google.com") return "Google Developers";
+  if (/^(docs?|developer)\./.test(host) || /\.(edu|gov)$/.test(host)) return "Official documentation";
+  return "Learning resource";
+}
+
+export function directLearningResource(label: unknown, value: unknown): LearningResource | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  try {
+    const url = new URL(value);
+    const host = url.hostname.toLowerCase().replace(/^www\./, "");
+    const path = url.pathname.toLowerCase().replace(/\/$/, "");
+    if (url.protocol !== "https:" || !host || blockedResourceHosts.has(host) || !path || path === "/") return null;
+    if (["s", "q", "query", "search_query"].some(key => url.searchParams.has(key)) || /\/(search|tags?|categories)(\/|$)/.test(path)) return null;
+    if (host === "youtube.com" && path !== "/watch" && !path.startsWith("/playlist")) return null;
+    if (host === "youtu.be" && path.split("/").filter(Boolean).length !== 1) return null;
+    return {
+      label: typeof label === "string" && label.trim() ? label.trim().slice(0, 120) : "Open learning resource",
+      url: url.toString(),
+      provider: providerFor(url),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function fallbackAiLesson(topic: Pick<LearningTopic, "title" | "objective">): AiLesson {
+  const title = topic.title.trim();
+  const objective = topic.objective.trim();
+  return {
+    summary: `${title} is an essential part of this learning path. ${objective}`.slice(0, 520),
+    keyPoints: [
+      `Define ${title.toLowerCase()} in your own words.`,
+      `Identify where ${title.toLowerCase()} is used in a real workflow.`,
+      `Connect the idea to your target outcome and note one limitation or trade-off.`,
+    ],
+    example: `Work through one small example of ${title.toLowerCase()} that directly supports your learning goal. Record the input, the steps you took and the result.`,
+    practice: `Create a short explanation and a practical artifact that demonstrate: ${objective}`.slice(0, 420),
+  };
+}
+
+export function normalizeAiLesson(value: unknown, topic: Pick<LearningTopic, "title" | "objective">): AiLesson {
+  const fallback = fallbackAiLesson(topic);
+  if (!value || typeof value !== "object" || Array.isArray(value)) return fallback;
+  const lesson = value as Record<string, unknown>;
+  const keyPoints = Array.isArray(lesson.keyPoints)
+    ? lesson.keyPoints.filter((point): point is string => typeof point === "string" && point.trim().length > 5).map(point => point.trim().slice(0, 220)).slice(0, 5)
+    : [];
+  return {
+    summary: typeof lesson.summary === "string" && lesson.summary.trim().length > 20 ? lesson.summary.trim().slice(0, 520) : fallback.summary,
+    keyPoints: keyPoints.length >= 3 ? keyPoints : fallback.keyPoints,
+    example: typeof lesson.example === "string" && lesson.example.trim().length > 15 ? lesson.example.trim().slice(0, 520) : fallback.example,
+    practice: typeof lesson.practice === "string" && lesson.practice.trim().length > 15 ? lesson.practice.trim().slice(0, 420) : fallback.practice,
+  };
+}
+
 export function normalizeGeneratedLearningPath(raw: unknown, goal: LearningGoal, generatedAt = new Date().toISOString()): LearningPath | null {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const value = raw as Record<string, unknown>;
@@ -163,7 +237,8 @@ export function normalizeGeneratedLearningPath(raw: unknown, goal: LearningGoal,
         id: `${slug(generatedModule.title, `module-${moduleIndex + 1}`)}-${slug(topic.title, `topic-${topicIndex + 1}`)}`,
         title: topic.title.trim().slice(0, 100),
         objective: topic.objective.trim().slice(0, 240),
-        resource: directGfgResource(topic.resourceLabel, topic.resourceUrl),
+        resource: directLearningResource(topic.resourceLabel, topic.resourceUrl),
+        aiLesson: fallbackAiLesson({ title: topic.title, objective: topic.objective }),
       });
     }
     modules.push({ id: slug(generatedModule.title, `module-${moduleIndex + 1}`), title: generatedModule.title.trim().slice(0, 90), description: generatedModule.description.trim().slice(0, 220), topics });
@@ -200,7 +275,7 @@ export function isLearningPath(value: unknown): value is LearningPath {
 }
 
 export function coursesFromPath(path: LearningPath): CourseView[] {
-  return path.modules.map(module => ({ ...module, hours: 10, topics: module.topics }));
+  return path.modules.map(module => ({ ...module, hours: 10, topics: module.topics.map(topic => ({ ...topic, aiLesson: topic.aiLesson || fallbackAiLesson(topic) })) }));
 }
 
 function makeTopicId(course: string, topic: string) {
@@ -213,13 +288,14 @@ export function curriculumFromPath(path: LearningPath): DayPlan[] {
   path.modules.forEach((module, moduleIndex) => {
     module.topics.forEach(topic => {
       const topicId = makeTopicId(module.title, topic.title);
-      days.push({ day, topic: topic.title, course: module.title, week: Math.ceil(day / 7), objective: topic.objective, resource: topic.resource, tasks: [
+      const preparedTopic = { ...topic, aiLesson: topic.aiLesson || fallbackAiLesson(topic) };
+      days.push({ day, topic: topic.title, course: module.title, week: Math.ceil(day / 7), objective: topic.objective, resource: preparedTopic.resource, aiLesson: preparedTopic.aiLesson, tasks: [
         { id: `d${day}-learn`, title: `Learn: ${topic.title}`, type: "Lesson", mins: 40, required: true, topicId },
         { id: `d${day}-notes`, title: "Explain the idea in your own words", type: "Review", mins: 20, required: true },
         { id: `d${day}-questions`, title: "Write three questions to test your understanding", type: "Practice", mins: 20, required: false },
       ] });
       day += 1;
-      days.push({ day, topic: `${topic.title} · applied practice`, course: module.title, week: Math.ceil(day / 7), objective: `Apply ${topic.title.toLowerCase()} in a concrete exercise connected to ${path.goal.outcome.toLowerCase()}.`, resource: topic.resource, tasks: [
+      days.push({ day, topic: `${topic.title} · applied practice`, course: module.title, week: Math.ceil(day / 7), objective: `Apply ${topic.title.toLowerCase()} in a concrete exercise connected to ${path.goal.outcome.toLowerCase()}.`, resource: preparedTopic.resource, aiLesson: preparedTopic.aiLesson, tasks: [
         { id: `d${day}-practice`, title: `Practice: ${topic.title}`, type: "Practice", mins: 45, required: true, topicId },
         { id: `d${day}-evidence`, title: "Save evidence of what you produced", type: "Project", mins: 25, required: true },
         { id: `d${day}-reflect`, title: "Record one strength and one gap", type: "Review", mins: 15, required: false },

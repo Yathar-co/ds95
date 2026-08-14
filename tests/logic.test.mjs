@@ -8,7 +8,7 @@ import {
   progressStorageKey,
   topicProgressId,
 } from "../lib/progress.ts";
-import { curriculumFromPath, directGfgResource, normalizeGeneratedLearningPath } from "../lib/learning-path.ts";
+import { curriculumFromPath, directGfgResource, directLearningResource, normalizeGeneratedLearningPath } from "../lib/learning-path.ts";
 
 const active = (a) => !!a && (a.tasks > 0 || a.minutes >= 30);
 const marker = ({day,complete,challenge=false,done=0,required=3}) => {
@@ -152,4 +152,38 @@ test("resource validation accepts direct GFG articles and rejects searches or ot
   assert.equal(directGfgResource("Search", "https://www.geeksforgeeks.org/?s=python+variables"), null);
   assert.equal(directGfgResource("Imposter", "https://example.com/geeksforgeeks/python"), null);
   assert.equal(directGfgResource("Insecure", "http://www.geeksforgeeks.org/python/python-variables/"), null);
+});
+
+test("resource validation accepts researched learning providers and rejects search pages", () => {
+  assert.equal(directLearningResource("Kaggle intro", "https://www.kaggle.com/learn/intro-to-machine-learning")?.provider, "Kaggle Learn");
+  assert.equal(directLearningResource("Video lesson", "https://www.youtube.com/watch?v=abcdefghijk")?.provider, "YouTube");
+  assert.equal(directLearningResource("MDN guide", "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide")?.provider, "MDN");
+  assert.equal(directLearningResource("Search", "https://www.youtube.com/results?search_query=javascript"), null);
+  assert.equal(directLearningResource("Search", "https://www.google.com/search?q=javascript"), null);
+});
+
+test("AI learning paths always include a usable lesson fallback", () => {
+  const modules = Array.from({ length: 8 }, (_, moduleIndex) => ({
+    title: `Module ${moduleIndex + 1}`,
+    description: "A focused and practical learning module.",
+    topics: Array.from({ length: 5 }, (_, topicIndex) => ({
+      title: `Topic ${moduleIndex + 1}.${topicIndex + 1}`,
+      objective: "Understand the concept and apply it in a real exercise.",
+      resourceLabel: "",
+      resourceUrl: "",
+    })),
+  }));
+  const projects = Array.from({ length: 3 }, (_, index) => ({
+    title: `Project ${index + 1}`,
+    description: "Create a substantial proof-of-learning artifact for the selected outcome.",
+    tools: ["Practice", "Documentation"],
+    resourceLabel: "",
+    resourceUrl: "",
+    tasks: ["Define scope", "Create draft", "Test result", "Document work", "Publish outcome"],
+  }));
+  const path = normalizeGeneratedLearningPath(
+    { title: "Personal mastery", tagline: "Learn by building", description: "A complete path from foundations to a substantial final outcome.", modules, projects },
+    { subject: "Example skill", outcome: "Build a high-quality final artifact", experience: "beginner" },
+  );
+  assert.ok(path?.modules.every(module => module.topics.every(topic => topic.aiLesson?.keyPoints.length >= 3)));
 });

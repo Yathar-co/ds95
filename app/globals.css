@@ -268,7 +268,29 @@ main { min-height: 100vh; padding-top: 104px; }
 .topic-grid small { margin-top: 4px; color: var(--subtle); font-size: 9px; }
 .gfg-link { width: fit-content; margin-top: 9px; color: var(--accent-soft); font-size: 10px; line-height: 1.4; text-decoration: none; }
 .gfg-link:hover { color: white; text-decoration: underline; text-underline-offset: 3px; }
-.resource-unavailable { width: fit-content; margin-top: 9px; color: var(--subtle); font-size: 9px; }
+.ai-lesson { margin-top: 18px; overflow: hidden; border: 1px solid rgba(124,115,255,.3); border-radius: 16px; background: linear-gradient(135deg,rgba(124,115,255,.12),rgba(124,115,255,.035)); }
+.ai-lesson summary { padding: 14px 16px; display: flex; align-items: center; gap: 10px; color: var(--text); cursor: pointer; list-style: none; }
+.ai-lesson summary::-webkit-details-marker { display: none; }
+.ai-lesson summary > span { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 8px; background: var(--accent); color: white; }
+.ai-lesson summary b { flex: 1; font-size: 11px; }
+.ai-lesson summary i { color: var(--accent-soft); font-size: 9px; font-style: normal; }
+.ai-lesson[open] summary { border-bottom: 1px solid rgba(124,115,255,.2); }
+.ai-lesson-body { padding: 18px; color: var(--muted); font-size: 11px; line-height: 1.65; }
+.ai-lesson-body > p { margin: 0 0 15px; }
+.ai-lesson-body h4 { margin: 0 0 8px; color: var(--text); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+.ai-lesson-body ul { margin: 0 0 16px; padding-left: 18px; }
+.ai-lesson-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.ai-lesson-grid article { padding: 13px; border: 1px solid var(--line); border-radius: 12px; background: rgba(0,0,0,.18); }
+.ai-lesson-grid article span { color: var(--accent-soft); font: 650 8px var(--font-geist-mono); letter-spacing: .09em; }
+.ai-lesson-grid article p { margin: 7px 0 0; }
+.ai-lesson-body > small { margin-top: 14px; display: block; color: var(--subtle); font-size: 8px; }
+.ai-lesson.compact { margin-top: 9px; border-radius: 12px; }
+.ai-lesson.compact summary { padding: 9px 10px; }
+.ai-lesson.compact summary > span { width: 20px; height: 20px; border-radius: 6px; font-size: 9px; }
+.ai-lesson.compact summary b { font-size: 9px; }
+.ai-lesson.compact summary i { display: none; }
+.ai-lesson.compact .ai-lesson-body { padding: 13px; font-size: 9px; }
+.ai-lesson.compact .ai-lesson-grid { grid-template-columns: 1fr; }
 .course-description { margin: 0 0 14px; color: var(--muted); font-size: 11px; line-height: 1.6; }
 .path-brief { margin: -26px 0 26px; padding: 22px 26px; display: flex; align-items: center; justify-content: space-between; gap: 24px; border: 1px solid rgba(124,115,255,.3); border-radius: 20px; background: linear-gradient(110deg,rgba(124,115,255,.12),rgba(124,115,255,.035)); }
 .path-brief h2 { margin: 7px 0 4px; font-size: 20px; font-weight: 560; }

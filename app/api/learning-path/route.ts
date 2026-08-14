@@ -1,6 +1,8 @@
 import {
   LEARNING_PATH_SCHEMA,
-  directGfgResource,
+  directLearningResource,
+  fallbackAiLesson,
+  normalizeAiLesson,
   normalizeGeneratedLearningPath,
   type ExperienceLevel,
   type LearningGoal,
@@ -74,6 +76,10 @@ function canonicalUrl(value: string) {
 function verifiedSearchUrls(message: GroqMessage | null) {
   const urls = new Set<string>();
   const visit = (value: unknown) => {
+    if (typeof value === "string") {
+      value.match(/https:\/\/[^\s<>"')\]]+/g)?.forEach(candidate => urls.add(canonicalUrl(candidate.replace(/[.,;:!?]+$/, ""))));
+      return;
+    }
     if (!value || typeof value !== "object") return;
     if (Array.isArray(value)) {
       value.forEach(visit);
@@ -90,7 +96,7 @@ function verifiedSearchUrls(message: GroqMessage | null) {
 async function groqChat(apiKey: string, body: JsonRecord, signal: AbortSignal) {
   const response = await fetch(GROQ_CHAT_URL, {
     method: "POST",
-    headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
+    headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json", "Groq-Model-Version": "latest" },
     signal,
     body: JSON.stringify(body),
   });
@@ -105,13 +111,14 @@ async function addVerifiedResources(module: LearningModule, goal: LearningGoal, 
       model: process.env.GROQ_RESEARCH_MODEL || "groq/compound",
       store: false,
       temperature: 0,
+      max_completion_tokens: 4_500,
       citation_options: "disabled",
-      search_settings: { include_domains: ["geeksforgeeks.org"] },
+      compound_custom: { tools: { enabled_tools: ["web_search", "visit_website"] } },
       response_format: { type: "json_object" },
       messages: [
         {
           role: "system",
-          content: "Find a genuinely relevant, direct GeeksforGeeks learning article for each supplied topic. Use web search for every topic. Return only JSON with this shape: {\"resources\":[{\"topicId\":\"the supplied ID\",\"label\":\"descriptive article label\",\"url\":\"direct canonical HTTPS article URL\"}]}. Omit a topic when no relevant direct article exists. Never return a search-results URL, homepage, tag page, category page, invented URL, or unrelated page.",
+          content: "Research every supplied topic separately. Search broadly and visit promising pages. Prefer, in order: a directly relevant GeeksforGeeks article; Kaggle Learn; official product or language documentation; freeCodeCamp; MDN; Microsoft Learn; Google Developers; a focused university or government guide; then a high-quality YouTube lesson. Never use a search-results page, homepage, tag/category page, invented URL or loosely related source. Return only JSON shaped as {\"topics\":[{\"topicId\":\"supplied ID\",\"resource\":{\"label\":\"specific source title\",\"url\":\"direct canonical HTTPS URL\"}|null,\"lesson\":{\"summary\":\"clear 2-4 sentence explanation\",\"keyPoints\":[\"3-5 essential points\"],\"example\":\"concrete worked example\",\"practice\":\"specific practice exercise\"}}]}. Include every topic exactly once. The lesson is a fallback study guide and must be accurate and useful even when a source is found.",
         },
         {
           role: "user",
@@ -122,22 +129,42 @@ async function addVerifiedResources(module: LearningModule, goal: LearningGoal, 
     const message = messageFrom(response);
     const verifiedUrls = verifiedSearchUrls(message);
     const parsed = JSON.parse(textFrom(message)) as JsonRecord;
-    const resources = Array.isArray(parsed.resources) ? parsed.resources : [];
-    const byTopic = new Map<string, ReturnType<typeof directGfgResource>>();
-    resources.forEach(value => {
+    const topics = Array.isArray(parsed.topics) ? parsed.topics : [];
+    const researched = new Map<string, { resource: ReturnType<typeof directLearningResource>; lesson: unknown }>();
+    topics.forEach(value => {
       if (!value || typeof value !== "object") return;
-      const resource = value as JsonRecord;
-      if (typeof resource.topicId !== "string") return;
-      const direct = directGfgResource(resource.label, resource.url);
-      if (direct && verifiedUrls.has(canonicalUrl(direct.url))) byTopic.set(resource.topicId, direct);
+      const result = value as JsonRecord;
+      if (typeof result.topicId !== "string") return;
+      const candidate = result.resource && typeof result.resource === "object" && !Array.isArray(result.resource) ? result.resource as JsonRecord : null;
+      const direct = candidate ? directLearningResource(candidate.label, candidate.url) : null;
+      researched.set(result.topicId, { resource: direct && verifiedUrls.has(canonicalUrl(direct.url)) ? direct : null, lesson: result.lesson });
     });
-    return { ...module, topics: module.topics.map(topic => ({ ...topic, resource: byTopic.get(topic.id) || null })) };
+    return {
+      ...module,
+      topics: module.topics.map(topic => {
+        const result = researched.get(topic.id);
+        return { ...topic, resource: result?.resource || null, aiLesson: normalizeAiLesson(result?.lesson, topic) };
+      }),
+    };
   } catch (error) {
     if (error instanceof DOMException && error.name === "AbortError") throw error;
     console.warn("Groq resource research failed for module", module.id, error);
-    return { ...module, topics: module.topics.map(topic => ({ ...topic, resource: null })) };
+    return { ...module, topics: module.topics.map(topic => ({ ...topic, resource: null, aiLesson: topic.aiLesson || fallbackAiLesson(topic) })) };
   }
 }
+
+const { projects: projectProperty, ...curriculumProperties } = LEARNING_PATH_SCHEMA.properties;
+const CURRICULUM_SCHEMA = {
+  ...LEARNING_PATH_SCHEMA,
+  required: ["title", "tagline", "description", "modules"],
+  properties: curriculumProperties,
+};
+const PROJECTS_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["projects"],
+  properties: { projects: projectProperty },
+};
 
 export async function POST(request: Request) {
   const userId = await currentUserId(request);
@@ -159,28 +186,36 @@ export async function POST(request: Request) {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 115_000);
   try {
-    const generation = await groqChat(apiKey, {
-      model: process.env.GROQ_SYLLABUS_MODEL || "openai/gpt-oss-120b",
-      store: false,
-      temperature: 0.35,
-      response_format: {
-        type: "json_schema",
-        json_schema: { name: "ds95_learning_path", strict: true, schema: groqCompatibleSchema(LEARNING_PATH_SCHEMA) },
-      },
-      messages: [
-        {
-          role: "system",
-          content: "You design rigorous, practical 95-day learning programs. Create exactly 8 progressive modules with exactly 5 distinct subtopics each, plus exactly 3 increasingly ambitious proof-of-learning projects. Keep the path focused on the learner's outcome and appropriate to their experience. Module titles, subtopics, exercises and projects must be concrete rather than generic. Resource research happens separately, so set every resourceLabel and resourceUrl to an empty string and every project referenceLabel and referenceUrl to an empty string.",
-        },
-        {
-          role: "user",
-          content: `Subject: ${goal.subject}\nDesired outcome: ${goal.outcome}\nCurrent experience: ${goal.experience}\n\nBuild a coherent path from the learner's current level to that specific outcome.`,
-        },
-      ],
-    }, controller.signal);
+    const commonUserPrompt = `Subject: ${goal.subject}\nDesired outcome: ${goal.outcome}\nCurrent experience: ${goal.experience}`;
+    const [curriculumGeneration, projectGeneration] = await Promise.all([
+      groqChat(apiKey, {
+        model: process.env.GROQ_SYLLABUS_MODEL || "openai/gpt-oss-120b",
+        store: false,
+        temperature: 0.35,
+        max_completion_tokens: 10_000,
+        response_format: { type: "json_schema", json_schema: { name: "ds95_curriculum", strict: true, schema: groqCompatibleSchema(CURRICULUM_SCHEMA) } },
+        messages: [
+          { role: "system", content: "Design a rigorous, practical 95-day learning curriculum. Create exactly 8 progressive modules with exactly 5 distinct, concrete subtopics each. Keep it focused on the learner's outcome and appropriate to their experience. Resource research happens separately, so set each topic resourceLabel and resourceUrl to an empty string." },
+          { role: "user", content: `${commonUserPrompt}\n\nBuild a coherent curriculum from the learner's current level to that specific outcome.` },
+        ],
+      }, controller.signal),
+      groqChat(apiKey, {
+        model: process.env.GROQ_SYLLABUS_MODEL || "openai/gpt-oss-120b",
+        store: false,
+        temperature: 0.3,
+        max_completion_tokens: 4_000,
+        response_format: { type: "json_schema", json_schema: { name: "ds95_projects", strict: true, schema: groqCompatibleSchema(PROJECTS_SCHEMA) } },
+        messages: [
+          { role: "system", content: "Create exactly 3 increasingly ambitious proof-of-learning projects for the learner's specific outcome. Each project must have concrete deliverables, 2-5 relevant tools and exactly 5 tasks. Set resourceLabel and resourceUrl to empty strings because source research happens separately." },
+          { role: "user", content: `${commonUserPrompt}\n\nCreate a foundation project, an applied project and a portfolio-quality capstone.` },
+        ],
+      }, controller.signal),
+    ]);
     let parsed: unknown;
     try {
-      parsed = JSON.parse(textFrom(messageFrom(generation)));
+      const curriculum = JSON.parse(textFrom(messageFrom(curriculumGeneration))) as JsonRecord;
+      const projects = JSON.parse(textFrom(messageFrom(projectGeneration))) as JsonRecord;
+      parsed = { ...curriculum, projects: projects.projects };
     } catch {
       return Response.json({ error: "The AI planner returned an incomplete roadmap. Please try again." }, { status: 502 });
     }

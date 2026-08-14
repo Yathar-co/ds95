@@ -26,7 +26,7 @@ test("finished app replaces starter preview and contains core product surfaces",
   assert.match(page, /Open & run in Lab/);
   assert.match(page, /Open project workspace/);
   assert.match(page, /Link a GitHub repository/);
-  assert.match(page, /Learn this topic on GeeksforGeeks/);
+  assert.match(page, /Learn with \{topic\.resource\.provider\}/);
   assert.match(page, /function gfgUrl/);
   assert.match(page, /toggleTopic/);
   assert.match(page, /Completed from syllabus/);
@@ -59,13 +59,17 @@ test("generates account-specific AI learning paths with direct resource safeguar
   assert.match(route, /api\.groq\.com\/openai\/v1\/chat\/completions/);
   assert.match(route, /openai\/gpt-oss-120b/);
   assert.match(route, /groq\/compound/);
-  assert.match(route, /include_domains: \["geeksforgeeks\.org"\]/);
+  assert.match(route, /enabled_tools: \["web_search", "visit_website"\]/);
   assert.match(route, /executed_tools/);
+  assert.match(route, /max_completion_tokens: 10_000/);
+  assert.match(route, /ds95_curriculum/);
+  assert.match(route, /ds95_projects/);
   assert.match(route, /type: "json_schema"/);
   assert.match(learningPath, /curriculumFromPath/);
   assert.match(learningPath, /url\.searchParams\.has\("s"\)/);
   assert.match(page, /Generate my 95-day roadmap/);
-  assert.match(page, /No relevant GeeksforGeeks guide found/);
+  assert.match(page, /Learn with the AI study guide/);
+  assert.match(page, /verified direct sources/);
   assert.match(page, /Build a new learning path/);
   assert.match(env, /GROQ_API_KEY/);
 });
