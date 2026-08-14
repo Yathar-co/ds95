@@ -30,6 +30,11 @@ test("finished app replaces starter preview and contains core product surfaces",
   assert.match(page, /Air Quality & Mobility Intelligence/);
   assert.match(page, /Mortgage Fairness Audit/);
   assert.match(page, /NYC Mobility Analytics Warehouse/);
+  assert.match(page, /BADGE CABINET/);
+  assert.match(page, /First Step/);
+  assert.match(page, /Portfolio Builder/);
+  assert.match(page, /DataSprint Graduate/);
+  assert.match(page, /earnedBadgeCount/);
   assert.doesNotMatch(page, /progress:100/);
   assert.doesNotMatch(page, /i<3\?"earned"/);
   assert.doesNotMatch(page, /geeksforgeeks\.org\/\?s=/);
