@@ -1,5 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
+import {
+  createFreshState,
+  normalizeProgressState,
+  progressStorageKey,
+} from "../lib/progress.ts";
 
 const active = (a) => !!a && (a.tasks > 0 || a.minutes >= 30);
 const marker = ({day,complete,challenge=false,done=0,required=3}) => {
@@ -29,4 +34,38 @@ test("deadline markers use grace and overdue windows", () => {
 test("expected completion caps at one hundred percent", () => {
   assert.equal(expected(48), 51);
   assert.equal(expected(120), 100);
+});
+
+test("new accounts begin at zero with isolated storage", () => {
+  const first = createFreshState("First account", "2026-08-14");
+  const second = createFreshState("Second account", "2026-08-14");
+  assert.equal(first.xp, 0);
+  assert.deepEqual(first.activities, {});
+  assert.deepEqual(second.activities, {});
+  assert.notEqual(progressStorageKey("user-a"), progressStorageKey("user-b"));
+});
+
+test("known demo progress is reset without changing real progress", () => {
+  const fresh = createFreshState("Learner", "2026-08-14");
+  const legacyActivities = Object.fromEntries(
+    Array.from({ length: 20 }, (_, index) => [
+      `day-${index}`,
+      {
+        completed: Array.from({ length: index < 6 ? 2 : 3 }, (__, task) => `task-${task}`),
+        minutes: 60,
+        notes: "",
+        difficulty: 3,
+        confidence: 3,
+      },
+    ]),
+  );
+  const legacy = { ...fresh, name: "Alex", xp: 1480, onboarded: true, activities: legacyActivities };
+  const migrated = normalizeProgressState(legacy, "Real account");
+  assert.equal(migrated.name, "Real account");
+  assert.equal(migrated.xp, 0);
+  assert.deepEqual(migrated.activities, {});
+  assert.equal(migrated.onboarded, true);
+
+  const real = { ...fresh, xp: 50 };
+  assert.equal(normalizeProgressState(real, "Real account"), real);
 });

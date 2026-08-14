@@ -30,11 +30,20 @@ test("finished app replaces starter preview and contains core product surfaces",
 });
 
 test("includes Supabase email sign-up, recovery, and account controls", async () => {
-  const source = await readFile(new URL("../app/page.tsx", import.meta.url), "utf8");
+  const [source, progress] = await Promise.all([
+    readFile(new URL("../app/page.tsx", import.meta.url), "utf8"),
+    readFile(new URL("../lib/progress.ts", import.meta.url), "utf8"),
+  ]);
   assert.match(source, /signInWithPassword/);
   assert.match(source, /resetPasswordForEmail/);
   assert.match(source, /updateUser/);
   assert.match(source, /Create account/);
   assert.match(source, /DataSprint never stores your password/);
   assert.match(source, /Sign out/);
+  assert.match(source, /progressStorageKey\(session\.user\.id\)/);
+  assert.doesNotMatch(source, /localStorage\.(?:getItem|setItem)\("datasprint95"/);
+  assert.match(progress, /xp: 0/);
+  assert.match(progress, /activities: \{\}/);
+  assert.match(progress, /`datasprint95:\$\{userId\}`/);
+  assert.match(progress, /isLegacyDemoState/);
 });
