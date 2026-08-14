@@ -21,6 +21,11 @@ test("finished app replaces starter preview and contains core product surfaces",
   assert.match(page, /function Today/);
   assert.match(page, /function Syllabus/);
   assert.match(page, /function Analytics/);
+  assert.match(page, /function Workspace/);
+  assert.match(page, /DATASPRINT LAB · BROWSER IDE/);
+  assert.match(page, /Open & run in Lab/);
+  assert.match(page, /Open project workspace/);
+  assert.match(page, /Link a GitHub repository/);
   assert.match(page, /Learn this topic on GeeksforGeeks/);
   assert.match(page, /function gfgUrl/);
   assert.match(page, /toggleTopic/);
@@ -41,6 +46,24 @@ test("finished app replaces starter preview and contains core product surfaces",
   assert.match(layout, /og-dusk-workspace\.png/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);
   await assert.rejects(access(new URL("../app/_sites-preview/SkeletonPreview.tsx", import.meta.url)));
+});
+
+test("workspace uses pinned browser runtimes and authenticated storage fields", async () => {
+  const [workspace, worker, progressRoute, packageJson] = await Promise.all([
+    readFile(new URL("../lib/workspace.ts", import.meta.url), "utf8"),
+    readFile(new URL("../public/workers/python-runner.js", import.meta.url), "utf8"),
+    readFile(new URL("../app/api/progress/route.ts", import.meta.url), "utf8"),
+    readFile(new URL("../package.json", import.meta.url), "utf8"),
+  ]);
+  assert.match(workspace, /runWorkspaceCode/);
+  assert.match(workspace, /PGlite\.create/);
+  assert.match(workspace, /captureR/);
+  assert.match(worker, /pyodide\/v0\.29\.4/);
+  assert.match(worker, /runPythonAsync/);
+  assert.match(progressRoute, /workspaceFiles/);
+  assert.match(progressRoute, /projectRepositories/);
+  assert.match(packageJson, /"@electric-sql\/pglite": "0\.5\.4"/);
+  assert.match(packageJson, /"webr": "0\.6\.0"/);
 });
 
 test("includes Supabase email sign-up, recovery, and account controls", async () => {

@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   createFreshState,
   normalizeProgressState,
+  normalizeGithubRepositoryUrl,
   progressStorageKey,
   topicProgressId,
 } from "../lib/progress.ts";
@@ -44,19 +45,32 @@ test("new accounts begin at zero with isolated storage", () => {
   assert.deepEqual(first.activities, {});
   assert.deepEqual(first.completedTopics, []);
   assert.deepEqual(first.completedProjectTasks, []);
+  assert.deepEqual(first.workspaceFiles, []);
+  assert.deepEqual(first.projectRepositories, {});
   assert.deepEqual(second.activities, {});
   assert.notEqual(progressStorageKey("user-a"), progressStorageKey("user-b"));
 });
 
-test("older progress gains topic and project completion storage without losing activity", () => {
+test("older progress gains workspace storage without losing activity", () => {
   const current = createFreshState("Learner", "2026-08-14");
   const legacy = { ...current, xp: 50 };
   delete legacy.completedTopics;
   delete legacy.completedProjectTasks;
+  delete legacy.workspaceFiles;
+  delete legacy.projectRepositories;
   const migrated = normalizeProgressState(legacy, "Learner");
   assert.deepEqual(migrated.completedTopics, []);
   assert.deepEqual(migrated.completedProjectTasks, []);
+  assert.deepEqual(migrated.workspaceFiles, []);
+  assert.deepEqual(migrated.projectRepositories, {});
   assert.equal(migrated.xp, 50);
+});
+
+test("GitHub repository links are normalized and constrained to repositories", () => {
+  assert.equal(normalizeGithubRepositoryUrl("git@github.com:Yathar-co/ds95.git"), "https://github.com/Yathar-co/ds95");
+  assert.equal(normalizeGithubRepositoryUrl("github.com/Yathar-co/ds95/"), "https://github.com/Yathar-co/ds95");
+  assert.equal(normalizeGithubRepositoryUrl("https://gitlab.com/Yathar-co/ds95"), null);
+  assert.equal(normalizeGithubRepositoryUrl("https://github.com/Yathar-co"), null);
 });
 
 test("topic completion ids are stable across syllabus and daily views", () => {

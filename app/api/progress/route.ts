@@ -69,7 +69,27 @@ function isProgressState(value: unknown): value is Record<string, unknown> {
       (Array.isArray(state.completedTopics) && state.completedTopics.every((topic) => typeof topic === "string"))) &&
     (state.completedProjectTasks === undefined ||
       (Array.isArray(state.completedProjectTasks) && state.completedProjectTasks.every((task) => typeof task === "string"))) &&
+    (state.workspaceFiles === undefined ||
+      (Array.isArray(state.workspaceFiles) && state.workspaceFiles.length <= 100 && state.workspaceFiles.every(isWorkspaceFile))) &&
+    (state.projectRepositories === undefined || isRepositoryMap(state.projectRepositories)) &&
     Array.isArray(state.personalTasks) &&
     Array.isArray(state.freezes)
   );
+}
+
+function isWorkspaceFile(value: unknown) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const file = value as Record<string, unknown>;
+  return typeof file.id === "string" && file.id.length <= 120 &&
+    typeof file.name === "string" && file.name.length <= 120 &&
+    (file.language === "python" || file.language === "r" || file.language === "sql") &&
+    typeof file.code === "string" && file.code.length <= 60_000 &&
+    typeof file.updatedAt === "string" &&
+    (file.day === undefined || (Number.isInteger(file.day) && Number(file.day) > 0 && Number(file.day) <= 95)) &&
+    (file.projectId === undefined || (typeof file.projectId === "string" && file.projectId.length <= 100));
+}
+
+function isRepositoryMap(value: unknown) {
+  return !!value && typeof value === "object" && !Array.isArray(value) &&
+    Object.entries(value).every(([key, url]) => key.length <= 100 && typeof url === "string" && url.length <= 300);
 }
