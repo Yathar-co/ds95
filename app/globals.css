@@ -664,3 +664,350 @@ main { min-height: 100vh; padding-top: 104px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+
+/* DS95 product system — quiet, focused, built for long study sessions */
+:root {
+  --canvas: #0b0c0f;
+  --canvas-soft: #101115;
+  --surface: #15161a;
+  --surface-raised: #1a1b20;
+  --surface-hover: #202126;
+  --text: #f1f0ec;
+  --muted: #b8b7b2;
+  --subtle: #898a91;
+  --line: rgba(255, 255, 255, 0.085);
+  --line-strong: rgba(255, 255, 255, 0.15);
+  --accent: #8179ee;
+  --accent-soft: #b0abff;
+  --accent-wash: rgba(129, 121, 238, 0.105);
+  --radius-sm: 7px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --shadow-card: 0 1px 0 rgba(255,255,255,.035) inset, 0 18px 55px rgba(0,0,0,.16);
+  --ease-out: cubic-bezier(.22, 1, .36, 1);
+}
+
+body {
+  background:
+    radial-gradient(900px 520px at 50% -180px, rgba(129,121,238,.105), transparent 72%),
+    linear-gradient(180deg, #0b0c0f 0%, #0d0e12 52%, #0b0c0f 100%);
+  font-feature-settings: "ss01" 1, "cv02" 1, "cv03" 1;
+}
+
+main { padding-top: 96px; }
+.page { padding-top: 54px; animation: page-in .5s var(--ease-out) both; }
+@keyframes page-in { from { opacity: 0; transform: translateY(6px); } }
+
+/* The command dock stays quiet until it is needed. */
+.floating-nav {
+  top: 16px;
+  width: min(1030px, calc(100% - 32px));
+  min-height: 62px;
+  padding: 6px 7px 6px 9px;
+  gap: 8px;
+  border-color: rgba(255,255,255,.11);
+  border-radius: 17px;
+  background: rgba(15,16,19,.84);
+  backdrop-filter: blur(22px) saturate(125%);
+  box-shadow: 0 16px 50px rgba(0,0,0,.28), 0 1px rgba(255,255,255,.04) inset;
+}
+.nav-logo {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: #f1f0ec;
+  font-size: 13px;
+  transition: transform .24s var(--ease-out), background .2s ease;
+}
+.nav-logo:hover { transform: rotate(-2deg) scale(1.02); background: white; }
+.nav-links { gap: 1px; }
+.nav-links button {
+  min-height: 40px;
+  padding-inline: 14px;
+  border-radius: 11px;
+  color: #9c9da4;
+  font-size: 12px;
+  letter-spacing: -.005em;
+  transition: color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+.nav-links button:hover { background: rgba(255,255,255,.035); }
+.nav-links button.active {
+  border-color: rgba(255,255,255,.09);
+  background: rgba(255,255,255,.065);
+  box-shadow: 0 1px rgba(255,255,255,.04) inset, 0 5px 16px rgba(0,0,0,.12);
+}
+.nav-profile { width: 40px; height: 40px; border-radius: 12px; font-size: 12px; }
+.sync-status { font-size: 10px; }
+.nav-continue, .primary, .secondary {
+  min-height: 44px;
+  border-radius: 11px;
+  font-size: 13px;
+  transition: border-color .18s ease, color .18s ease, background .18s ease, box-shadow .22s var(--ease-out), transform .22s var(--ease-out);
+}
+.nav-continue, .primary { background: #f1f0ec; color: #111216; box-shadow: none; }
+.nav-continue:hover, .primary:hover { transform: translateY(-1px); background: white; box-shadow: 0 8px 24px rgba(0,0,0,.22); }
+.secondary:hover { transform: none; border-color: rgba(255,255,255,.28); }
+
+/* Typography has an editorial hierarchy and readable support text. */
+.eyebrow { color: #a09fa5; font-size: 11px; line-height: 1.4; letter-spacing: .12em; }
+.page-head { min-height: 190px; margin-bottom: 44px; }
+.page-head h1 {
+  margin-block: 16px;
+  max-width: 900px;
+  font-size: clamp(44px, 5.2vw, 68px);
+  font-weight: 480;
+  line-height: .99;
+  letter-spacing: -.052em;
+}
+.page-head h1 strong { color: var(--accent-soft); }
+.page-head p, .welcome p { max-width: 680px; font-size: 15px; line-height: 1.65; }
+.section-title h3, .chart-card h3 { font-size: 19px; font-weight: 580; }
+.section-title > span { font-size: 13px; }
+.section-title button, .resource-line button, .personal-row button { min-height: 40px; font-size: 13px; }
+.tag { padding: 7px 10px; border-radius: 7px; font-size: 10px; }
+.pills span, .tool-list span { padding: 6px 9px; border-radius: 7px; font-size: 10px; }
+
+.heat-card, .next-card, .weekly-card, .lesson-card, .timer-card, .task-list, .reflection, .code-exercise, .personal-card, .chart-card, .project-card, .achievements {
+  border-color: var(--line);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(180deg, rgba(25,26,30,.96), rgba(20,21,25,.96));
+  box-shadow: var(--shadow-card);
+}
+
+/* Dashboard: a restrained horizon instead of a loud marketing gradient. */
+.mission-hero {
+  min-height: 510px;
+  margin: 10px 0 72px;
+  padding: clamp(42px, 5vw, 64px);
+  grid-template-columns: 1.12fr .78fr;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 28px;
+  background:
+    radial-gradient(700px 460px at 100% 0%, rgba(69,86,190,.4), transparent 70%),
+    radial-gradient(640px 420px at 0% 100%, rgba(184,95,80,.25), transparent 72%),
+    linear-gradient(128deg, #272128 0%, #242231 48%, #182342 100%);
+  box-shadow: 0 32px 90px rgba(0,0,0,.28), inset 0 1px rgba(255,255,255,.055);
+}
+.mission-hero::before {
+  width: 480px;
+  top: -62%;
+  right: -10%;
+  border-color: rgba(255,255,255,.11);
+  box-shadow: 0 0 0 76px rgba(255,255,255,.022), 0 0 0 152px rgba(255,255,255,.015);
+}
+.status-pill { padding: 8px 12px; border-radius: 9px; border-color: rgba(255,255,255,.22); background: rgba(7,8,11,.2); font-size: 10px; }
+.mission-hero .eyebrow { margin-top: 30px; }
+.mission-hero h1 { max-width: 710px; font-size: clamp(50px, 5.8vw, 72px); line-height: .96; letter-spacing: -.057em; }
+.mission-hero p { max-width: 570px; font-size: 15px; }
+.mission-bullets { margin-block: 24px; gap: 10px; font-size: 13px; }
+.hero-signal { padding-left: 38px; }
+.signal-window {
+  min-height: 305px;
+  padding: 32px;
+  border: 1px solid rgba(255,255,255,.42);
+  border-radius: 22px 22px 5px 5px;
+  background: rgba(242,241,237,.94);
+  box-shadow: 0 26px 60px rgba(0,0,0,.17);
+}
+.signal-window > b { font-size: 68px; }
+.welcome h2 { font-size: 32px; font-weight: 520; }
+.alert { border-radius: 12px; }
+.alert p { font-size: 12px; }
+.command-card { min-height: 285px; padding: 38px; border-radius: 24px; background: linear-gradient(120deg, rgba(129,121,238,.09), transparent 48%), var(--surface); }
+.command-day { min-width: 165px; }
+.command-day b { font-size: 80px; }
+.hero-copy { padding-inline: 38px; }
+.hero-copy p { font-size: 14px; }
+.metrics, .analytics-metrics { gap: 12px; }
+.metric { padding: 20px; border-radius: 14px; background: rgba(20,21,25,.9); transition: border-color .18s ease, background .18s ease; }
+.metric:hover { transform: none; background: var(--surface-raised); }
+.metric-icon { border-radius: 10px; }
+.metric b { font-size: 19px; }
+.metric span:not(.metric-icon) { font-size: 12px; }
+.metric small { font-size: 10px; }
+.next-task { border: 1px solid rgba(255,255,255,.055); border-radius: 12px; }
+.next-task h4 { font-size: 14px; }
+.next-task p, .weekly-card > p { font-size: 11px; }
+.weekly-grid small { font-size: 10px; }
+
+/* Daily learning */
+.lesson-card, .timer-card, .task-list, .reflection, .code-exercise { padding: 30px; }
+.lesson-card h2 { font-size: 30px; font-weight: 540; }
+.today-resource { min-height: 42px; align-items: center; border-radius: 10px; font-size: 12px; }
+.lesson-meta { font-size: 12px; }
+.task-list article { padding-block: 19px; }
+.task-list h4 { font-size: 15px; }
+.task-list small { font-size: 11px; }
+.reflection label, .ratings > div { font-size: 12px; }
+.reflection textarea, .add-task input, .search, .onboard-form input, .onboard-form select, .onboard-form textarea {
+  background: #111216;
+  border-radius: 10px;
+  transition: border-color .18s ease, box-shadow .18s ease, background .18s ease;
+}
+.reflection textarea:focus, .add-task input:focus, .onboard-form input:focus, .onboard-form select:focus, .onboard-form textarea:focus {
+  border-color: var(--accent);
+  outline: 0;
+  box-shadow: 0 0 0 3px rgba(129,121,238,.11);
+}
+
+/* Syllabus: less container noise, more reading rhythm. */
+.toolbar { margin-bottom: 24px; }
+.search { min-height: 54px; }
+.section-title select, .toolbar select { min-height: 54px; border-radius: 10px; font-size: 12px; }
+.course-list { gap: 14px; }
+.course { border-radius: 18px; background: rgba(19,20,24,.92); box-shadow: none; }
+.course:has(.course-num.current) { border-color: rgba(129,121,238,.38); box-shadow: 0 20px 55px rgba(0,0,0,.12); }
+.course-head { padding: 25px 28px; }
+.course-head:hover { background: rgba(255,255,255,.018); }
+.course-num { border-radius: 10px; }
+.course-head small { font-size: 10px; }
+.course-head h3 { font-size: 19px; font-weight: 560; }
+.course-content { padding-bottom: 32px; }
+.topic-grid { gap: 12px; }
+.topic-grid > div { padding: 21px; border-radius: 14px; background: #191a1e; }
+.topic-grid > div:hover { background: #1c1d22; box-shadow: inset 3px 0 var(--accent); }
+.topic-check { width: 36px; height: 36px; border-radius: 9px; }
+.topic-check:hover { transform: none; }
+.gfg-link { margin-top: 13px; font-size: 13px; }
+.ai-lesson { border-radius: 12px; background: #1c1d23; }
+.ai-lesson summary { min-height: 56px; }
+.ai-lesson summary b { font-size: 13px; }
+.ai-lesson-body { color: #cccbd0; font-size: 15px; line-height: 1.78; }
+.ai-lesson-body h4 { font-size: 11px; }
+.ai-lesson-grid article { border-radius: 10px; background: #17181c; }
+.path-brief { border-radius: 15px; }
+.path-brief p, .resource-line { font-size: 12px; }
+.personal-card p, .personal-row { font-size: 13px; }
+
+/* Portfolio and analytics */
+.project-grid { gap: 14px; }
+.project-card { min-height: 0; padding: 26px; transition: border-color .18s ease, background .18s ease; }
+.project-card:hover { transform: none; border-color: rgba(255,255,255,.2); }
+.project-card.current { box-shadow: inset 0 0 0 1px rgba(129,121,238,.12), 0 18px 55px rgba(0,0,0,.14); }
+.project-top { font-size: 11px; }
+.project-icon { width: 48px; height: 48px; margin: 30px 0 20px; border-radius: 12px; }
+.project-card h2 { font-size: 24px; }
+.project-card > p { min-height: 76px; font-size: 14px; }
+.project-card li, .project-task { font-size: 12px; }
+.project-destinations > .primary, .project-destinations > a { border-radius: 10px; }
+.repo-linker label, .linked-repo > span { font-size: 10px; }
+.repo-linker input, .repo-linker button { font-size: 11px; }
+.achievements { padding: 32px; }
+.badge-summary, .achievement-grid article { border-radius: 13px; }
+.badge-summary p { font-size: 12px; }
+.achievement-grid b { font-size: 12px; }
+.achievement-grid small { font-size: 9px; }
+.achievement-grid .earned:hover { transform: none; }
+.chart-card { padding: 28px; }
+.chart-card > p, .chart-legend { font-size: 11px; }
+.y-labels, .x-labels, .bars small { font-size: 9px; }
+
+/* Browser IDE: a workbench, not a decorative mockup. */
+.workspace-page { width: min(100% - 48px, 1440px); }
+.runtime-pills span { border-radius: 8px; font-size: 10px; }
+.ide-shell { min-height: 710px; grid-template-columns: 250px minmax(0,1fr); border-radius: 18px; background: #0d0e11; box-shadow: 0 28px 80px rgba(0,0,0,.26); }
+.file-explorer { padding: 17px 13px; background: #111216; }
+.explorer-head b, .explorer-head > span, .file-group > span, .new-file > span { font-size: 9px; }
+.new-file select, .new-file button { min-height: 38px; font-size: 10px; }
+.quick-languages button { min-height: 32px; }
+.file-group > small { color: #777881; font-size: 10px; }
+.file-group > button { min-height: 38px; border-radius: 8px; }
+.file-group button i, .file-group button small { font-size: 9px; }
+.file-group button span { font-size: 11px; }
+.editor-tabs { background: #121318; }
+.editor-tabs .active { min-width: 225px; font-size: 11px; background: #0d0e11; }
+.editor-tabs i, .editor-tabs b, .save-state { font-size: 9px; }
+.editor-toolbar { min-height: 60px; }
+.editor-toolbar > input { font-size: 14px; }
+.editor-toolbar > div > span, .delete-file { font-size: 10px; }
+.run-button { min-height: 38px; border-radius: 9px; }
+.notes-save { border-radius: 8px; font-size: 9px !important; }
+.editor-area { background: #0a0b0e; }
+.editor-area > pre, .editor-area textarea { font-size: 14px; line-height: 1.75; }
+.output-panel { background: #101115; }
+.output-panel > div:first-child b, .output-panel > div:first-child span { font-size: 9px; }
+.output-panel > pre { font-size: 13px; }
+.output-empty p { font-size: 12px; }
+.output-empty small { color: #7e7f87; font-size: 10px; }
+.result-table-wrap table { font-size: 11px; }
+.runtime-notes article { border-radius: 13px; }
+.runtime-notes b { font-size: 12px; }
+.runtime-notes p { font-size: 10px; }
+
+/* Auth and onboarding keep the brand cinematic but calm. */
+.auth-visual {
+  background:
+    radial-gradient(760px 620px at 20% 92%, rgba(177,91,76,.46), transparent 70%),
+    radial-gradient(720px 600px at 92% 8%, rgba(59,75,163,.58), transparent 70%),
+    linear-gradient(140deg,#242029 0%,#242230 48%,#17213f 100%);
+}
+.auth-brand { border-radius: 12px; }
+.auth-visual h1 { max-width: 760px; font-size: clamp(52px,6vw,82px); }
+.auth-panel { background: radial-gradient(520px 340px at 100% 0,rgba(129,121,238,.09),transparent 74%),var(--canvas); }
+.auth-panel h2 { font-size: 40px; }
+.auth-form label { font-size: 12px; }
+.auth-form input { min-height: 52px; border-radius: 10px; }
+.password-field button { border-radius: 7px; font-size: 11px; }
+.auth-primary { border-radius: 11px; }
+.auth-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(0,0,0,.22); }
+.auth-text-button, .auth-switch, .auth-note, .auth-guide { font-size: 12px !important; }
+.onboarding { background: radial-gradient(circle at 18% 42%, rgba(129,121,238,.11), transparent 34%), rgba(9,10,13,.98); }
+.onboard-shell { gap: clamp(40px,6vw,72px); }
+.onboard-intro h1 { font-size: clamp(54px,6.5vw,78px); }
+.onboard-form { padding: 40px; border-radius: 20px; background: rgba(20,21,25,.96); }
+.onboard-form label, .label { font-size: 12px; }
+.demo-link, .generation-note, .plan-summary span, .preview-modules span, .onboard-error { font-size: 10px !important; }
+.day-picks button, .plan-summary, .preview-modules span { border-radius: 9px; }
+.toast { border-radius: 10px; }
+
+/* Consistent interaction affordances. */
+button, a, input, select, textarea { touch-action: manipulation; }
+button:active:not(:disabled), .primary:active, .secondary:active { transform: scale(.985); }
+.course-head:focus-visible, .topic-check:focus-visible, .project-task:focus-visible { outline-offset: -3px; }
+
+@media (max-width: 960px) {
+  .mission-hero { grid-template-columns: 1fr; }
+  .hero-signal { max-width: 620px; padding-left: 0; }
+  .project-grid { grid-template-columns: 1fr 1fr; }
+  .achievement-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 720px) {
+  main { padding-top: 8px; }
+  .page { width: min(100% - 28px, var(--page)); padding-top: 28px; }
+  .bottom-nav { height: 68px; border-radius: 18px; background: rgba(17,18,22,.92); }
+  .bottom-nav button { min-height: 54px; border-radius: 13px; }
+  .bottom-nav span { font-size: 9px; }
+  .mission-hero { margin-bottom: 48px; padding: 30px 22px; border-radius: 21px; }
+  .mission-hero h1 { font-size: clamp(42px,13vw,52px); }
+  .signal-window { border-radius: 18px 18px 4px 4px; }
+  .page-head { margin-top: 22px; }
+  .page-head h1 { font-size: clamp(42px,12vw,50px); }
+  .heat-card, .next-card, .weekly-card, .lesson-card, .timer-card, .task-list, .reflection, .code-exercise, .personal-card, .chart-card, .achievements { border-radius: 17px; }
+  .course-content { padding-left: 17px; }
+  .topic-grid > div { border-radius: 12px; }
+  .project-grid { grid-template-columns: 1fr; }
+  .project-card > p { min-height: 0; }
+  .workspace-page { width: min(100% - 18px, 1440px); }
+  .ide-shell { border-radius: 14px; }
+  .editor-tabs .active { min-width: 190px; }
+  .runtime-notes { grid-template-columns: 1fr; }
+  .onboard-form { padding: 28px 22px; border-radius: 16px; }
+}
+
+@media (max-width: 430px) {
+  .mission-hero { padding: 26px 19px; }
+  .status-pill { border-radius: 8px; }
+  .command-card { border-radius: 18px; }
+  .auth-panel h2 { font-size: 34px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
