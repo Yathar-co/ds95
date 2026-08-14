@@ -67,6 +67,8 @@ function isProgressState(value: unknown): value is Record<string, unknown> {
     state.activities !== null &&
     (state.completedTopics === undefined ||
       (Array.isArray(state.completedTopics) && state.completedTopics.every((topic) => typeof topic === "string"))) &&
+    (state.completedProjectTasks === undefined ||
+      (Array.isArray(state.completedProjectTasks) && state.completedProjectTasks.every((task) => typeof task === "string"))) &&
     Array.isArray(state.personalTasks) &&
     Array.isArray(state.freezes)
   );

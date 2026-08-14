@@ -277,7 +277,7 @@ main { min-height: 100vh; padding-top: 104px; }
 
 /* Projects and analytics */
 .project-grid { margin-bottom: 70px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-.project-card { min-height: 570px; padding: 28px; display: flex; flex-direction: column; transition: .2s ease; }
+.project-card { min-height: 640px; padding: 28px; display: flex; flex-direction: column; transition: .2s ease; }
 .project-card:hover { transform: translateY(-5px); border-color: var(--line-strong); }
 .project-card.current { border-color: rgba(124,115,255,.5); box-shadow: 0 0 50px rgba(124,115,255,.1); }
 .project-top { display: flex; justify-content: space-between; color: var(--muted); font: 600 10px var(--font-geist-mono); }
@@ -288,9 +288,12 @@ main { min-height: 100vh; padding-top: 104px; }
 .project-progress { margin: 26px 0; }
 .project-progress > div:first-child { margin-bottom: 9px; display: flex; justify-content: space-between; font: 600 10px var(--font-geist-mono); }
 .project-card ul { margin: 0 0 26px; padding: 0; flex: 1; list-style: none; }
-.project-card li { padding: 11px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
+.project-card li { border-top: 1px solid var(--line); color: var(--muted); font-size: 11px; }
 .project-card li span { margin-right: 9px; color: var(--accent-soft); }
-.project-card > button { width: 100%; }
+.project-task { width: 100%; padding: 11px 0; display: flex; align-items: center; border: 0; background: transparent; color: inherit; text-align: left; font: inherit; cursor: pointer; }
+.project-task:hover { color: var(--text); }
+.project-task:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
+.project-resource { width: 100%; display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
 .achievements { padding: 36px; }
 .achievement-grid { margin-top: 26px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
 .achievement-grid article { padding: 14px; display: flex; align-items: center; gap: 11px; border: 1px solid var(--line); border-radius: 15px; background: var(--surface-raised); }

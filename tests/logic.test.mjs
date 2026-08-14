@@ -43,16 +43,19 @@ test("new accounts begin at zero with isolated storage", () => {
   assert.equal(first.xp, 0);
   assert.deepEqual(first.activities, {});
   assert.deepEqual(first.completedTopics, []);
+  assert.deepEqual(first.completedProjectTasks, []);
   assert.deepEqual(second.activities, {});
   assert.notEqual(progressStorageKey("user-a"), progressStorageKey("user-b"));
 });
 
-test("older progress gains topic completion storage without losing activity", () => {
+test("older progress gains topic and project completion storage without losing activity", () => {
   const current = createFreshState("Learner", "2026-08-14");
   const legacy = { ...current, xp: 50 };
   delete legacy.completedTopics;
+  delete legacy.completedProjectTasks;
   const migrated = normalizeProgressState(legacy, "Learner");
   assert.deepEqual(migrated.completedTopics, []);
+  assert.deepEqual(migrated.completedProjectTasks, []);
   assert.equal(migrated.xp, 50);
 });
 

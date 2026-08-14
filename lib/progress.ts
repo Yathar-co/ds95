@@ -27,6 +27,7 @@ export type AppState = {
   xp: number;
   activities: Record<string, Activity>;
   completedTopics: string[];
+  completedProjectTasks: string[];
   personalTasks: Task[];
   freezes: string[];
 };
@@ -46,6 +47,7 @@ export function createFreshState(name = "Learner", startDate = localIso(new Date
     xp: 0,
     activities: {},
     completedTopics: [],
+    completedProjectTasks: [],
     personalTasks: [],
     freezes: [],
   };
@@ -69,6 +71,7 @@ export function isAppState(value: unknown): value is AppState {
     typeof state.activities === "object" &&
     !Array.isArray(state.activities) &&
     (state.completedTopics === undefined || Array.isArray(state.completedTopics)) &&
+    (state.completedProjectTasks === undefined || Array.isArray(state.completedProjectTasks)) &&
     Array.isArray(state.personalTasks) &&
     Array.isArray(state.freezes)
   );
@@ -84,9 +87,15 @@ export function normalizeProgressState(value: unknown, accountName: string): App
   if (!isAppState(value)) return createFreshState(accountName);
   const rawTopics = (value as AppState & { completedTopics?: unknown }).completedTopics;
   const topicsAreValid = Array.isArray(rawTopics) && rawTopics.every((topic) => typeof topic === "string");
-  const normalized = topicsAreValid
+  const rawProjectTasks = (value as AppState & { completedProjectTasks?: unknown }).completedProjectTasks;
+  const projectTasksAreValid = Array.isArray(rawProjectTasks) && rawProjectTasks.every((task) => typeof task === "string");
+  const normalized = topicsAreValid && projectTasksAreValid
     ? value
-    : { ...value, completedTopics: Array.isArray(rawTopics) ? rawTopics.filter((topic): topic is string => typeof topic === "string") : [] };
+    : {
+        ...value,
+        completedTopics: Array.isArray(rawTopics) ? rawTopics.filter((topic): topic is string => typeof topic === "string") : [],
+        completedProjectTasks: Array.isArray(rawProjectTasks) ? rawProjectTasks.filter((task): task is string => typeof task === "string") : [],
+      };
   if (!isLegacyDemoState(normalized)) return normalized;
   return { ...createFreshState(accountName), onboarded: normalized.onboarded };
 }
