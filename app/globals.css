@@ -256,8 +256,11 @@ main { min-height: 100vh; padding-top: 104px; }
 .topic-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .topic-grid > div { min-width: 0; padding: 14px; display: flex; align-items: flex-start; gap: 11px; border: 1px solid transparent; border-radius: 15px; background: var(--surface-raised); transition: .18s ease; }
 .topic-grid > div:hover { transform: translateY(-2px); border-color: var(--line); background: var(--surface-hover); }
-.topic-grid > div > span { width: 25px; height: 25px; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid var(--line-strong); border-radius: 7px; color: var(--muted); font: 600 9px var(--font-geist-mono); }
-.topic-grid > div > span.topic-done { border-color: var(--accent); background: var(--accent); color: white; }
+.topic-grid > div.completed { border-color: color-mix(in srgb, var(--accent) 30%, transparent); background: var(--accent-wash); }
+.topic-check { width: 27px; height: 27px; padding: 0; flex: 0 0 auto; display: grid; place-items: center; border: 1px solid var(--line-strong); border-radius: 8px; background: transparent; color: var(--muted); font: 600 9px var(--font-geist-mono); cursor: pointer; transition: .18s ease; }
+.topic-check:hover { border-color: var(--accent); color: var(--text); transform: scale(1.06); }
+.topic-check:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.topic-check.topic-done { border-color: var(--accent); background: var(--accent); color: white; box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 14%, transparent); }
 .topic-grid > div > div { min-width: 0; display: grid; }
 .topic-grid b { font-size: 12px; line-height: 1.35; }
 .topic-grid small { margin-top: 4px; color: var(--subtle); font-size: 9px; }

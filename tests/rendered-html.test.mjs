@@ -23,6 +23,8 @@ test("finished app replaces starter preview and contains core product surfaces",
   assert.match(page, /function Analytics/);
   assert.match(page, /Learn this topic on GeeksforGeeks/);
   assert.match(page, /function gfgUrl/);
+  assert.match(page, /toggleTopic/);
+  assert.match(page, /Completed from syllabus/);
   assert.doesNotMatch(page, /geeksforgeeks\.org\/\?s=/);
   assert.match(layout, /og-dusk-workspace\.png/);
   assert.doesNotMatch(packageJson, /react-loading-skeleton/);

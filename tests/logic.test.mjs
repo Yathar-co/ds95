@@ -4,6 +4,7 @@ import {
   createFreshState,
   normalizeProgressState,
   progressStorageKey,
+  topicProgressId,
 } from "../lib/progress.ts";
 
 const active = (a) => !!a && (a.tasks > 0 || a.minutes >= 30);
@@ -41,8 +42,25 @@ test("new accounts begin at zero with isolated storage", () => {
   const second = createFreshState("Second account", "2026-08-14");
   assert.equal(first.xp, 0);
   assert.deepEqual(first.activities, {});
+  assert.deepEqual(first.completedTopics, []);
   assert.deepEqual(second.activities, {});
   assert.notEqual(progressStorageKey("user-a"), progressStorageKey("user-b"));
+});
+
+test("older progress gains topic completion storage without losing activity", () => {
+  const current = createFreshState("Learner", "2026-08-14");
+  const legacy = { ...current, xp: 50 };
+  delete legacy.completedTopics;
+  const migrated = normalizeProgressState(legacy, "Learner");
+  assert.deepEqual(migrated.completedTopics, []);
+  assert.equal(migrated.xp, 50);
+});
+
+test("topic completion ids are stable across syllabus and daily views", () => {
+  assert.equal(
+    topicProgressId("What is Data Science?", "Structured and unstructured data"),
+    "what is data science?::structured and unstructured data",
+  );
 });
 
 test("known demo progress is reset without changing real progress", () => {

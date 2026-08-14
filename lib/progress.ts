@@ -4,6 +4,7 @@ export type Task = {
   type: "Lesson" | "Practice" | "Project" | "Review";
   mins: number;
   required: boolean;
+  topicId?: string;
 };
 
 export type Activity = {
@@ -25,6 +26,7 @@ export type AppState = {
   onboarded: boolean;
   xp: number;
   activities: Record<string, Activity>;
+  completedTopics: string[];
   personalTasks: Task[];
   freezes: string[];
 };
@@ -43,6 +45,7 @@ export function createFreshState(name = "Learner", startDate = localIso(new Date
     onboarded: false,
     xp: 0,
     activities: {},
+    completedTopics: [],
     personalTasks: [],
     freezes: [],
   };
@@ -65,6 +68,7 @@ export function isAppState(value: unknown): value is AppState {
     !!state.activities &&
     typeof state.activities === "object" &&
     !Array.isArray(state.activities) &&
+    (state.completedTopics === undefined || Array.isArray(state.completedTopics)) &&
     Array.isArray(state.personalTasks) &&
     Array.isArray(state.freezes)
   );
@@ -78,6 +82,15 @@ export function isLegacyDemoState(state: AppState) {
 
 export function normalizeProgressState(value: unknown, accountName: string): AppState {
   if (!isAppState(value)) return createFreshState(accountName);
-  if (!isLegacyDemoState(value)) return value;
-  return { ...createFreshState(accountName), onboarded: value.onboarded };
+  const rawTopics = (value as AppState & { completedTopics?: unknown }).completedTopics;
+  const topicsAreValid = Array.isArray(rawTopics) && rawTopics.every((topic) => typeof topic === "string");
+  const normalized = topicsAreValid
+    ? value
+    : { ...value, completedTopics: Array.isArray(rawTopics) ? rawTopics.filter((topic): topic is string => typeof topic === "string") : [] };
+  if (!isLegacyDemoState(normalized)) return normalized;
+  return { ...createFreshState(accountName), onboarded: normalized.onboarded };
+}
+
+export function topicProgressId(course: string, topic: string) {
+  return `${course.trim().toLowerCase()}::${topic.trim().toLowerCase()}`;
 }
