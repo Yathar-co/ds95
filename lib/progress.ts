@@ -1,3 +1,5 @@
+import { isLearningPath, type LearningPath } from "./learning-path.ts";
+
 export type Task = {
   id: string;
   title: string;
@@ -17,7 +19,17 @@ export type Activity = {
   reflection?: string;
 };
 
-export type WorkspaceLanguage = "python" | "r" | "sql";
+export const WORKSPACE_LANGUAGE_VALUES = [
+  "python", "r", "sql", "javascript", "typescript", "html", "css",
+  "c", "cpp", "java", "csharp", "go", "rust", "kotlin", "swift",
+  "ruby", "php", "bash", "scala", "dart", "lua", "perl", "haskell", "notes",
+] as const;
+
+export type WorkspaceLanguage = typeof WORKSPACE_LANGUAGE_VALUES[number];
+
+export function isWorkspaceLanguage(value: unknown): value is WorkspaceLanguage {
+  return typeof value === "string" && (WORKSPACE_LANGUAGE_VALUES as readonly string[]).includes(value);
+}
 
 export type WorkspaceFile = {
   id: string;
@@ -44,6 +56,7 @@ export type AppState = {
   projectRepositories: Record<string, string>;
   personalTasks: Task[];
   freezes: string[];
+  learningPath?: LearningPath;
 };
 
 function localIso(date: Date) {
@@ -66,6 +79,7 @@ export function createFreshState(name = "Learner", startDate = localIso(new Date
     projectRepositories: {},
     personalTasks: [],
     freezes: [],
+    learningPath: undefined,
   };
 }
 
@@ -91,7 +105,8 @@ export function isAppState(value: unknown): value is AppState {
     (state.workspaceFiles === undefined || Array.isArray(state.workspaceFiles)) &&
     (state.projectRepositories === undefined || (!!state.projectRepositories && typeof state.projectRepositories === "object" && !Array.isArray(state.projectRepositories))) &&
     Array.isArray(state.personalTasks) &&
-    Array.isArray(state.freezes)
+    Array.isArray(state.freezes) &&
+    (state.learningPath === undefined || isLearningPath(state.learningPath))
   );
 }
 
@@ -115,12 +130,15 @@ export function normalizeProgressState(value: unknown, accountName: string): App
   const projectRepositories = rawRepositories && typeof rawRepositories === "object" && !Array.isArray(rawRepositories)
     ? Object.fromEntries(Object.entries(rawRepositories).filter(([key, url]) => key.length <= 100 && typeof url === "string" && url.length <= 300))
     : {};
-  const normalized: AppState = topicsAreValid && projectTasksAreValid && filesAreValid && repositoriesAreValid ? value : {
+  const rawLearningPath = (value as AppState & { learningPath?: unknown }).learningPath;
+  const pathIsValid = rawLearningPath === undefined || isLearningPath(rawLearningPath);
+  const normalized: AppState = topicsAreValid && projectTasksAreValid && filesAreValid && repositoriesAreValid && pathIsValid ? value : {
     ...value,
     completedTopics: topicsAreValid ? rawTopics : Array.isArray(rawTopics) ? rawTopics.filter((topic): topic is string => typeof topic === "string") : [],
     completedProjectTasks: projectTasksAreValid ? rawProjectTasks : Array.isArray(rawProjectTasks) ? rawProjectTasks.filter((task): task is string => typeof task === "string") : [],
     workspaceFiles,
     projectRepositories,
+    learningPath: pathIsValid ? rawLearningPath : undefined,
   };
   if (!isLegacyDemoState(normalized)) return normalized;
   return { ...createFreshState(accountName), onboarded: normalized.onboarded };
@@ -131,7 +149,7 @@ function isWorkspaceFile(value: unknown): value is WorkspaceFile {
   const file = value as Partial<WorkspaceFile>;
   return typeof file.id === "string" && file.id.length <= 120 &&
     typeof file.name === "string" && file.name.length <= 120 &&
-    (file.language === "python" || file.language === "r" || file.language === "sql") &&
+    isWorkspaceLanguage(file.language) &&
     typeof file.code === "string" && file.code.length <= 60_000 &&
     typeof file.updatedAt === "string" &&
     (file.day === undefined || (Number.isInteger(file.day) && file.day > 0 && file.day <= 95)) &&

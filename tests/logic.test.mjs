@@ -2,11 +2,13 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   createFreshState,
+  isWorkspaceLanguage,
   normalizeProgressState,
   normalizeGithubRepositoryUrl,
   progressStorageKey,
   topicProgressId,
 } from "../lib/progress.ts";
+import { curriculumFromPath, directGfgResource, normalizeGeneratedLearningPath } from "../lib/learning-path.ts";
 
 const active = (a) => !!a && (a.tasks > 0 || a.minutes >= 30);
 const marker = ({day,complete,challenge=false,done=0,required=3}) => {
@@ -66,6 +68,13 @@ test("older progress gains workspace storage without losing activity", () => {
   assert.equal(migrated.xp, 50);
 });
 
+test("workspace accepts major programming languages and rejects unknown runtimes", () => {
+  for (const language of ["python", "javascript", "typescript", "c", "cpp", "java", "go", "rust", "swift", "haskell", "notes"]) {
+    assert.equal(isWorkspaceLanguage(language), true);
+  }
+  assert.equal(isWorkspaceLanguage("made-up-language"), false);
+});
+
 test("GitHub repository links are normalized and constrained to repositories", () => {
   assert.equal(normalizeGithubRepositoryUrl("git@github.com:Yathar-co/ds95.git"), "https://github.com/Yathar-co/ds95");
   assert.equal(normalizeGithubRepositoryUrl("github.com/Yathar-co/ds95/"), "https://github.com/Yathar-co/ds95");
@@ -103,4 +112,44 @@ test("known demo progress is reset without changing real progress", () => {
 
   const real = { ...fresh, xp: 50 };
   assert.equal(normalizeProgressState(real, "Real account"), real);
+});
+
+test("AI learning paths normalize into exactly 95 scheduled days", () => {
+  const modules = Array.from({ length: 8 }, (_, moduleIndex) => ({
+    title: `Module ${moduleIndex + 1}`,
+    description: "A focused and practical learning module.",
+    topics: Array.from({ length: 5 }, (_, topicIndex) => ({
+      title: `Topic ${moduleIndex + 1}.${topicIndex + 1}`,
+      objective: "Understand the concept and apply it in a real exercise.",
+      resourceLabel: "Direct guide",
+      resourceUrl: "https://www.geeksforgeeks.org/python/python-variables/",
+    })),
+  }));
+  const projects = Array.from({ length: 3 }, (_, index) => ({
+    title: `Project ${index + 1}`,
+    description: "Create a substantial proof-of-learning artifact for the selected outcome.",
+    tools: ["Practice", "Documentation"],
+    resourceLabel: "",
+    resourceUrl: "",
+    tasks: ["Define scope", "Create draft", "Test result", "Document work", "Publish outcome"],
+  }));
+  const path = normalizeGeneratedLearningPath(
+    { title: "Personal mastery", tagline: "Learn by building", description: "A complete path from foundations to a substantial final outcome.", modules, projects },
+    { subject: "Example skill", outcome: "Build a high-quality final artifact", experience: "beginner" },
+    "2026-08-14T00:00:00.000Z",
+  );
+  assert.ok(path);
+  const curriculum = curriculumFromPath(path);
+  assert.equal(curriculum.length, 95);
+  assert.equal(curriculum[0].day, 1);
+  assert.equal(curriculum[94].day, 95);
+  assert.equal(path.modules.flatMap(module => module.topics).length, 40);
+  assert.equal(path.projects.length, 3);
+});
+
+test("resource validation accepts direct GFG articles and rejects searches or other hosts", () => {
+  assert.ok(directGfgResource("Python variables", "https://www.geeksforgeeks.org/python/python-variables/"));
+  assert.equal(directGfgResource("Search", "https://www.geeksforgeeks.org/?s=python+variables"), null);
+  assert.equal(directGfgResource("Imposter", "https://example.com/geeksforgeeks/python"), null);
+  assert.equal(directGfgResource("Insecure", "http://www.geeksforgeeks.org/python/python-variables/"), null);
 });

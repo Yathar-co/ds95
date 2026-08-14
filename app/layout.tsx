@@ -9,13 +9,13 @@ export async function generateMetadata(): Promise<Metadata> {
   const base = new URL(`${protocol}://${host}`);
   return {
     metadataBase: base,
-    title: "DataSprint 95 — Build skills that compound",
-    description: "A focused 95-day data science and machine-learning learning sprint.",
+    title: "DS95 — Turn any learning goal into a 95-day plan",
+    description: "Choose what you want to master. DS95 builds a personal AI syllabus, daily plan, direct learning resources and proof-of-learning projects.",
     icons: { icon: "/favicon.svg", shortcut: "/favicon.svg" },
     openGraph: {
-      title: "DataSprint 95",
-      description: "95 days. 178 hours. One job-ready data science portfolio.",
-      images: [{ url: new URL("/og-dusk-workspace.png", base).toString(), width: 1200, height: 630, alt: "DataSprint 95 — Build skills daily. Stay on track." }],
+      title: "DS95 — Your AI learning system",
+      description: "One goal. A personal syllabus. 95 days of focused progress.",
+      images: [{ url: new URL("/og-dusk-workspace.png", base).toString(), width: 1200, height: 630, alt: "DS95 — Choose a goal and build it in 95 days." }],
     },
     twitter: { card: "summary_large_image", images: [new URL("/og-dusk-workspace.png", base).toString()] },
   };
