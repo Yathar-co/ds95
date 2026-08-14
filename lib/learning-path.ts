@@ -268,6 +268,57 @@ export function normalizeGeneratedLearningPath(raw: unknown, goal: LearningGoal,
   return { version: 1, title: value.title.trim().slice(0, 80), tagline: value.tagline.trim().slice(0, 100), description: value.description.trim().slice(0, 320), generatedAt, goal, modules, projects };
 }
 
+export function fallbackLearningPath(goal: LearningGoal, generatedAt = new Date().toISOString()): LearningPath {
+  const subject = goal.subject.trim();
+  const outcome = goal.outcome.trim();
+  const stages = [
+    ["Orientation and foundations", ["Field overview", "Essential vocabulary", "Foundational principles", "Common workflows", "Ethics and responsible practice"]],
+    ["Core concepts", ["Mental models", "Inputs and outputs", "Processes and systems", "Patterns and relationships", "Limits and trade-offs"]],
+    ["Essential tools", ["Workspace setup", "Primary toolchain", "Documentation skills", "Reusable workflows", "Debugging fundamentals"]],
+    ["Guided practice", ["First guided exercise", "Breaking down problems", "Working from examples", "Checking your understanding", "Building independent fluency"]],
+    ["Applied methods", ["Planning an application", "Choosing an approach", "Building a first version", "Testing the result", "Iterating from feedback"]],
+    ["Quality and problem solving", ["Quality criteria", "Diagnosing weak results", "Performance and efficiency", "Reliability and edge cases", "Responsible decision-making"]],
+    ["Delivery and communication", ["Explaining your work", "Documenting decisions", "Presenting evidence", "Receiving critique", "Refining for an audience"]],
+    ["Capstone and mastery", ["Capstone scope", "Implementation plan", "Build and integration", "Validation and polish", "Publish and reflect"]],
+  ] as const;
+  const modules = stages.map(([title, topics], moduleIndex) => ({
+    title: `${moduleIndex + 1}. ${title}`,
+    description: `Develop the ${title.toLowerCase()} needed to progress from ${goal.experience} level toward ${outcome}.`,
+    topics: topics.map(topic => ({
+      title: `${subject}: ${topic}`,
+      objective: `Learn and apply ${topic.toLowerCase()} in ${subject}, then connect it directly to the goal: ${outcome}.`,
+      resourceLabel: "",
+      resourceUrl: "",
+    })),
+  }));
+  const projectStages = [
+    ["Foundation proof", "Create a small, complete artifact that demonstrates the essential foundations."],
+    ["Applied build", "Solve a realistic problem and document the choices, evidence and iteration."],
+    ["Portfolio capstone", `Deliver a polished result that proves you can ${outcome.toLowerCase()}.`],
+  ] as const;
+  const projects = projectStages.map(([title, description], index) => ({
+    title: `${subject} ${title}`,
+    description,
+    tools: ["Primary subject tools", "Documentation"],
+    resourceLabel: "",
+    resourceUrl: "",
+    tasks: index === 0
+      ? ["Define the learning question", "Collect two strong references", "Build the smallest complete version", "Check it against clear criteria", "Document what you learned"]
+      : index === 1
+        ? ["Choose a realistic use case", "Write a scoped implementation plan", "Build the working solution", "Test with representative cases", "Publish a concise case study"]
+        : ["Define the capstone brief", "Plan milestones and success criteria", "Build and integrate the final result", "Validate, refine and document it", "Publish and present the outcome"],
+  }));
+  const normalized = normalizeGeneratedLearningPath({
+    title: `${subject} in 95 Days`,
+    tagline: `A focused path from ${goal.experience} foundations to visible proof of skill.`,
+    description: `A practical 95-day curriculum designed around ${outcome}, with progressive concepts, guided practice and portfolio evidence.`,
+    modules,
+    projects,
+  }, goal, generatedAt);
+  if (!normalized) throw new Error("Unable to construct fallback learning path");
+  return normalized;
+}
+
 export function isLearningPath(value: unknown): value is LearningPath {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const path = value as Partial<LearningPath>;

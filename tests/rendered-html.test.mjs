@@ -61,7 +61,8 @@ test("generates account-specific AI learning paths with direct resource safeguar
   assert.match(route, /groq\/compound/);
   assert.match(route, /enabled_tools: \["web_search", "visit_website"\]/);
   assert.match(route, /executed_tools/);
-  assert.match(route, /max_completion_tokens: 10_000/);
+  assert.match(route, /max_completion_tokens: 3_600/);
+  assert.match(route, /fallbackLearningPath/);
   assert.match(route, /ds95_curriculum/);
   assert.match(route, /ds95_projects/);
   assert.match(route, /type: "json_schema"/);

@@ -8,7 +8,7 @@ import {
   progressStorageKey,
   topicProgressId,
 } from "../lib/progress.ts";
-import { curriculumFromPath, directGfgResource, directLearningResource, normalizeGeneratedLearningPath } from "../lib/learning-path.ts";
+import { curriculumFromPath, directGfgResource, directLearningResource, fallbackLearningPath, normalizeGeneratedLearningPath } from "../lib/learning-path.ts";
 
 const active = (a) => !!a && (a.tasks > 0 || a.minutes >= 30);
 const marker = ({day,complete,challenge=false,done=0,required=3}) => {
@@ -186,4 +186,17 @@ test("AI learning paths always include a usable lesson fallback", () => {
     { subject: "Example skill", outcome: "Build a high-quality final artifact", experience: "beginner" },
   );
   assert.ok(path?.modules.every(module => module.topics.every(topic => topic.aiLesson?.keyPoints.length >= 3)));
+});
+
+test("planner fallback always creates a complete personalized 95-day path", () => {
+  const path = fallbackLearningPath({
+    subject: "AI teaching",
+    outcome: "Design and deliver practical AI lessons for beginners",
+    experience: "beginner",
+  }, "2026-08-14T00:00:00.000Z");
+  assert.equal(path.modules.length, 8);
+  assert.equal(path.modules.flatMap(module => module.topics).length, 40);
+  assert.equal(path.projects.length, 3);
+  assert.equal(curriculumFromPath(path).length, 95);
+  assert.match(path.title, /AI teaching/);
 });

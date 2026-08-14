@@ -1,6 +1,7 @@
 import {
   LEARNING_PATH_SCHEMA,
   directLearningResource,
+  fallbackLearningPath,
   fallbackAiLesson,
   normalizeAiLesson,
   normalizeGeneratedLearningPath,
@@ -111,7 +112,7 @@ async function addVerifiedResources(module: LearningModule, goal: LearningGoal, 
       model: process.env.GROQ_RESEARCH_MODEL || "groq/compound",
       store: false,
       temperature: 0,
-      max_completion_tokens: 4_500,
+      max_completion_tokens: 1_200,
       citation_options: "disabled",
       compound_custom: { tools: { enabled_tools: ["web_search", "visit_website"] } },
       response_format: { type: "json_object" },
@@ -192,7 +193,7 @@ export async function POST(request: Request) {
         model: process.env.GROQ_SYLLABUS_MODEL || "openai/gpt-oss-120b",
         store: false,
         temperature: 0.35,
-        max_completion_tokens: 10_000,
+        max_completion_tokens: 3_600,
         response_format: { type: "json_schema", json_schema: { name: "ds95_curriculum", strict: true, schema: groqCompatibleSchema(CURRICULUM_SCHEMA) } },
         messages: [
           { role: "system", content: "Design a rigorous, practical 95-day learning curriculum. Create exactly 8 progressive modules with exactly 5 distinct, concrete subtopics each. Keep it focused on the learner's outcome and appropriate to their experience. Resource research happens separately, so set each topic resourceLabel and resourceUrl to an empty string." },
@@ -203,7 +204,7 @@ export async function POST(request: Request) {
         model: process.env.GROQ_SYLLABUS_MODEL || "openai/gpt-oss-120b",
         store: false,
         temperature: 0.3,
-        max_completion_tokens: 4_000,
+        max_completion_tokens: 1_200,
         response_format: { type: "json_schema", json_schema: { name: "ds95_projects", strict: true, schema: groqCompatibleSchema(PROJECTS_SCHEMA) } },
         messages: [
           { role: "system", content: "Create exactly 3 increasingly ambitious proof-of-learning projects for the learner's specific outcome. Each project must have concrete deliverables, 2-5 relevant tools and exactly 5 tasks. Set resourceLabel and resourceUrl to empty strings because source research happens separately." },
@@ -216,11 +217,15 @@ export async function POST(request: Request) {
       const curriculum = JSON.parse(textFrom(messageFrom(curriculumGeneration))) as JsonRecord;
       const projects = JSON.parse(textFrom(messageFrom(projectGeneration))) as JsonRecord;
       parsed = { ...curriculum, projects: projects.projects };
-    } catch {
-      return Response.json({ error: "The AI planner returned an incomplete roadmap. Please try again." }, { status: 502 });
+    } catch (error) {
+      console.warn("AI planner returned incomplete JSON; using the resilient roadmap", error);
+      return Response.json({ learningPath: fallbackLearningPath(goal), notice: "A reliable starter roadmap was created while AI generation recovers." });
     }
     const learningPath = normalizeGeneratedLearningPath(parsed, goal);
-    if (!learningPath) return Response.json({ error: "The AI planner returned an invalid roadmap. Please try again." }, { status: 502 });
+    if (!learningPath) {
+      console.warn("AI planner returned an invalid roadmap; using the resilient roadmap");
+      return Response.json({ learningPath: fallbackLearningPath(goal), notice: "A reliable starter roadmap was created while AI generation recovers." });
+    }
 
     learningPath.modules = await Promise.all(
       learningPath.modules.map(module => addVerifiedResources(module, goal, apiKey, controller.signal)),
@@ -229,10 +234,10 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof GroqRequestError) {
       console.error("Groq learning path request failed", error.status, error.responseBody);
-      return Response.json({ error: error.status === 429 ? "The AI planner is busy. Wait a moment and try again." : "The AI planner could not create this roadmap. Please try again." }, { status: error.status === 429 ? 429 : 502 });
+      return Response.json({ learningPath: fallbackLearningPath(goal), notice: "Groq is temporarily limited, so DS95 created a reliable starter roadmap instead." });
     }
     console.error("Unable to generate learning path", error);
-    return Response.json({ error: error instanceof DOMException && error.name === "AbortError" ? "Roadmap generation timed out. Please try again." : "The AI planner is temporarily unavailable." }, { status: 503 });
+    return Response.json({ learningPath: fallbackLearningPath(goal), notice: "AI generation was temporarily unavailable, so DS95 created a reliable starter roadmap instead." });
   } finally {
     clearTimeout(timeout);
   }
